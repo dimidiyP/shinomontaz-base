@@ -405,7 +405,7 @@ function App() {
                 </div>
                 <div className="mt-4 flex space-x-4">
                   <button
-                    onClick={() => window.print()}
+                    onClick={() => generatePDF(createdRecord.record_id)}
                     className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium"
                   >
                     Распечатать акт
