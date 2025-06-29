@@ -530,6 +530,39 @@ function App() {
                   <p className="text-blue-100">Посмотреть все сделанные записи</p>
                 </button>
               )}
+
+              {hasPermission('user_management') && (
+                <button
+                  onClick={() => {
+                    setCurrentPage('users');
+                    loadUsers();
+                  }}
+                  className="bg-purple-600 hover:bg-purple-700 text-white p-6 rounded-xl shadow-lg transition-colors"
+                >
+                  <h3 className="text-xl font-semibold mb-2">Управление пользователями</h3>
+                  <p className="text-purple-100">Создать и настроить пользователей</p>
+                </button>
+              )}
+
+              {hasPermission('form_management') && (
+                <button
+                  onClick={() => setCurrentPage('form-config')}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white p-6 rounded-xl shadow-lg transition-colors"
+                >
+                  <h3 className="text-xl font-semibold mb-2">Изменение формы записи</h3>
+                  <p className="text-indigo-100">Настроить поля формы записи</p>
+                </button>
+              )}
+
+              {hasPermission('pdf_management') && (
+                <button
+                  onClick={() => setCurrentPage('pdf-config')}
+                  className="bg-teal-600 hover:bg-teal-700 text-white p-6 rounded-xl shadow-lg transition-colors"
+                >
+                  <h3 className="text-xl font-semibold mb-2">Изменение формы Акта</h3>
+                  <p className="text-teal-100">Настроить шаблон PDF акта</p>
+                </button>
+              )}
             </div>
           </div>
         )}
