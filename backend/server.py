@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException, Depends, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse, StreamingResponse
 from pydantic import BaseModel
 from typing import Optional, List
 import os
@@ -10,6 +11,14 @@ from datetime import datetime
 import bcrypt
 from jose import JWTError, jwt
 from datetime import timedelta
+import io
+from reportlab.lib.pagesizes import A4
+from reportlab.pdfgen import canvas
+from reportlab.lib.units import mm
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+import pandas as pd
+import tempfile
 
 # Configuration
 SECRET_KEY = "your-secret-key-here"
