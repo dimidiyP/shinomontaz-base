@@ -40,6 +40,173 @@ function App() {
   const [records, setRecords] = useState([]);
   const [createdRecord, setCreatedRecord] = useState(null);
 
+  // Users management state
+  const [users, setUsers] = useState([]);
+  const [newUser, setNewUser] = useState({
+    username: '',
+    password: '',
+    role: 'user',
+    permissions: ['store', 'view']
+  });
+
+  // PDF and Excel functions
+  const generatePDF = async (recordId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_BASE_URL}/api/storage-records/${recordId}/pdf`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `act_${recordId}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      } else {
+        setError('Ошибка при генерации PDF');
+      }
+    } catch (err) {
+      setError('Ошибка подключения к серверу');
+    }
+  };
+
+  const exportToExcel = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_BASE_URL}/api/storage-records/export/excel`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `storage_records_${new Date().toISOString().split('T')[0]}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        setSuccess('Данные успешно экспортированы');
+      } else {
+        setError('Ошибка при экспорте данных');
+      }
+    } catch (err) {
+      setError('Ошибка подключения к серверу');
+    }
+  };
+
+  const loadUsers = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_BASE_URL}/api/users`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setUsers(data.users);
+      } else {
+        setError('Ошибка загрузки пользователей');
+      }
+    } catch (err) {
+      setError('Ошибка подключения к серверу');
+    }
+  };
+
+  const createUser = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_BASE_URL}/api/users`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(newUser),
+      });
+
+      if (response.ok) {
+        setSuccess('Пользователь успешно создан');
+        setNewUser({
+          username: '',
+          password: '',
+          role: 'user',
+          permissions: ['store', 'view']
+        });
+        loadUsers();
+      } else {
+        const data = await response.json();
+        setError(data.detail || 'Ошибка при создании пользователя');
+      }
+    } catch (err) {
+      setError('Ошибка подключения к серверу');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateUserPermissions = async (username, permissions) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_BASE_URL}/api/users/${username}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ permissions }),
+      });
+
+      if (response.ok) {
+        setSuccess('Права пользователя обновлены');
+        loadUsers();
+      } else {
+        setError('Ошибка при обновлении прав');
+      }
+    } catch (err) {
+      setError('Ошибка подключения к серверу');
+    }
+  };
+
+  const deleteUser = async (username) => {
+    if (window.confirm(`Вы уверены, что хотите удалить пользователя ${username}?`)) {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_BASE_URL}/api/users/${username}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+
+        if (response.ok) {
+          setSuccess('Пользователь удален');
+          loadUsers();
+        } else {
+          setError('Ошибка при удалении пользователя');
+        }
+      } catch (err) {
+        setError('Ошибка подключения к серверу');
+      }
+    }
+  };
+
   useEffect(() => {
     const token = localStorage.getItem('token');
     const userData = localStorage.getItem('user');
