@@ -359,7 +359,12 @@ def run_tests():
     suite.addTest(TireStorageAPITester('test_4_search_by_phone'))
     suite.addTest(TireStorageAPITester('test_5_get_all_records'))
     suite.addTest(TireStorageAPITester('test_6_release_record'))
-    suite.addTest(TireStorageAPITester('test_7_permission_check'))
+    suite.addTest(TireStorageAPITester('test_7_generate_pdf'))
+    suite.addTest(TireStorageAPITester('test_8_excel_export'))
+    suite.addTest(TireStorageAPITester('test_9_create_user'))
+    suite.addTest(TireStorageAPITester('test_10_update_user_permissions'))
+    suite.addTest(TireStorageAPITester('test_11_delete_user'))
+    suite.addTest(TireStorageAPITester('test_12_permission_check'))
     
     # Run tests
     runner = unittest.TextTestRunner(verbosity=2)
