@@ -1070,7 +1070,7 @@ function App() {
                 <div className="md:col-span-3">
                   <label className="block text-sm font-medium text-gray-700 mb-2">Права доступа</label>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                    {['store', 'release', 'view', 'form_management', 'pdf_management', 'user_management'].map(permission => (
+                    {['store', 'release', 'view', 'form_management', 'pdf_management', 'user_management', 'delete_records'].map(permission => (
                       <label key={permission} className="flex items-center">
                         <input
                           type="checkbox"
@@ -1090,7 +1090,8 @@ function App() {
                           permission === 'view' ? 'Просматривать' :
                           permission === 'form_management' ? 'Управлять формами' :
                           permission === 'pdf_management' ? 'Управлять PDF' :
-                          permission === 'user_management' ? 'Управлять пользователями' : permission
+                          permission === 'user_management' ? 'Управлять пользователями' :
+                          permission === 'delete_records' ? 'Удалять записи' : permission
                         }</span>
                       </label>
                     ))}
