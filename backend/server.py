@@ -61,6 +61,7 @@ users_collection = db.users
 storage_records_collection = db.storage_records
 form_config_collection = db.form_config
 pdf_template_collection = db.pdf_template
+retailcrm_orders_collection = db.retailcrm_orders
 
 # Security scheme
 security = HTTPBearer()
