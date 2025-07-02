@@ -30,6 +30,14 @@ SECRET_KEY = "your-secret-key-here"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
+# RetailCRM Configuration
+RETAILCRM_API_URL = "https://shlepakov.retailcrm.ru"
+RETAILCRM_API_KEY = "mTOKpWXudFmK5ZIWvLpQykiDzBJ2ffHM"
+
+# Setup logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 app = FastAPI()
 
 # CORS configuration
