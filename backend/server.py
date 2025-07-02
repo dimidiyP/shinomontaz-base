@@ -417,13 +417,14 @@ async def export_records_excel(current_user = Depends(verify_token)):
     )
 
 @app.post("/api/storage-records/import/excel")
-async def import_records_excel(file: bytes, current_user = Depends(verify_token)):
+async def import_records_excel(file: UploadFile = File(...), current_user = Depends(verify_token)):
     if "store" not in current_user["permissions"]:
         raise HTTPException(status_code=403, detail="Insufficient permissions")
     
     try:
         # Read Excel file
-        df = pd.read_excel(io.BytesIO(file))
+        contents = await file.read()
+        df = pd.read_excel(io.BytesIO(contents))
         
         # Validate required columns
         required_columns = ["ФИО", "Телефон", "Марка машины", "Параметры", "Размер", "Место хранения"]
