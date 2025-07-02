@@ -169,7 +169,157 @@ class TireStorageAPITester(unittest.TestCase):
         print(f"✅ Record released successfully")
         return True
 
-    def test_7_permission_check(self):
+    def test_7_generate_pdf(self):
+        """Test generating PDF for a record"""
+        if not self.created_record_id:
+            print("⚠️ Skipping PDF generation test - no record ID available")
+            return False
+            
+        print("\n🔍 Testing PDF Generation...")
+        headers = {"Authorization": f"Bearer {self.admin_token}"}
+        
+        response = requests.get(
+            f"{self.base_url}/api/storage-records/{self.created_record_id}/pdf", 
+            headers=headers
+        )
+        
+        self.assertEqual(response.status_code, 200, "Failed to generate PDF")
+        self.assertEqual(response.headers['Content-Type'], "application/pdf", "Response is not a PDF")
+        self.assertGreater(len(response.content), 0, "PDF content is empty")
+        
+        # Save PDF to verify it was generated correctly
+        with open(f"test_receipt_{self.created_record_id}.pdf", "wb") as f:
+            f.write(response.content)
+            
+        print(f"✅ PDF generated successfully and saved as test_receipt_{self.created_record_id}.pdf")
+        return True
+        
+    def test_8_excel_export(self):
+        """Test exporting records to Excel"""
+        print("\n🔍 Testing Excel Export...")
+        headers = {"Authorization": f"Bearer {self.admin_token}"}
+        
+        response = requests.get(
+            f"{self.base_url}/api/storage-records/export/excel", 
+            headers=headers
+        )
+        
+        self.assertEqual(response.status_code, 200, "Failed to export to Excel")
+        self.assertEqual(
+            response.headers['Content-Type'], 
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", 
+            "Response is not an Excel file"
+        )
+        self.assertGreater(len(response.content), 0, "Excel content is empty")
+        
+        # Save Excel file to verify it was generated correctly
+        with open("test_export.xlsx", "wb") as f:
+            f.write(response.content)
+            
+        print("✅ Excel export successful and saved as test_export.xlsx")
+        return True
+        
+    def test_9_create_user(self):
+        """Test creating a new user"""
+        print("\n🔍 Testing User Creation...")
+        headers = {"Authorization": f"Bearer {self.admin_token}"}
+        
+        user_data = {
+            "username": self.test_user,
+            "password": "TestPass123",
+            "role": "user",
+            "permissions": ["store", "view", "release"]
+        }
+        
+        response = requests.post(
+            f"{self.base_url}/api/users", 
+            json=user_data, 
+            headers=headers
+        )
+        
+        self.assertEqual(response.status_code, 200, "Failed to create user")
+        data = response.json()
+        self.assertIn("message", data, "Message not found in response")
+        
+        # Verify user was created by getting users list
+        response = requests.get(f"{self.base_url}/api/users", headers=headers)
+        self.assertEqual(response.status_code, 200, "Failed to get users list")
+        users_data = response.json()
+        
+        user_exists = False
+        for user in users_data.get("users", []):
+            if user.get("username") == self.test_user:
+                user_exists = True
+                self.assertEqual(user.get("role"), "user", "User role is incorrect")
+                self.assertIn("store", user.get("permissions", []), "Store permission missing")
+                self.assertIn("view", user.get("permissions", []), "View permission missing")
+                self.assertIn("release", user.get("permissions", []), "Release permission missing")
+                break
+                
+        self.assertTrue(user_exists, f"Created user {self.test_user} not found in users list")
+        print(f"✅ User {self.test_user} created successfully")
+        return True
+        
+    def test_10_update_user_permissions(self):
+        """Test updating user permissions"""
+        print("\n🔍 Testing Update User Permissions...")
+        headers = {"Authorization": f"Bearer {self.admin_token}"}
+        
+        # Update permissions to remove release permission
+        permissions_data = {
+            "permissions": ["store", "view"]
+        }
+        
+        response = requests.put(
+            f"{self.base_url}/api/users/{self.test_user}", 
+            json=permissions_data, 
+            headers=headers
+        )
+        
+        self.assertEqual(response.status_code, 200, "Failed to update user permissions")
+        
+        # Verify permissions were updated
+        response = requests.get(f"{self.base_url}/api/users", headers=headers)
+        self.assertEqual(response.status_code, 200, "Failed to get users list")
+        users_data = response.json()
+        
+        user_updated = False
+        for user in users_data.get("users", []):
+            if user.get("username") == self.test_user:
+                user_updated = True
+                self.assertIn("store", user.get("permissions", []), "Store permission missing")
+                self.assertIn("view", user.get("permissions", []), "View permission missing")
+                self.assertNotIn("release", user.get("permissions", []), "Release permission should be removed")
+                break
+                
+        self.assertTrue(user_updated, f"Updated user {self.test_user} not found in users list")
+        print(f"✅ User {self.test_user} permissions updated successfully")
+        return True
+        
+    def test_11_delete_user(self):
+        """Test deleting a user"""
+        print("\n🔍 Testing Delete User...")
+        headers = {"Authorization": f"Bearer {self.admin_token}"}
+        
+        response = requests.delete(
+            f"{self.base_url}/api/users/{self.test_user}", 
+            headers=headers
+        )
+        
+        self.assertEqual(response.status_code, 200, "Failed to delete user")
+        
+        # Verify user was deleted
+        response = requests.get(f"{self.base_url}/api/users", headers=headers)
+        self.assertEqual(response.status_code, 200, "Failed to get users list")
+        users_data = response.json()
+        
+        for user in users_data.get("users", []):
+            self.assertNotEqual(user.get("username"), self.test_user, f"User {self.test_user} was not deleted")
+            
+        print(f"✅ User {self.test_user} deleted successfully")
+        return True
+        
+    def test_12_permission_check(self):
         """Test permission checks for user role"""
         print("\n🔍 Testing User Permissions...")
         headers = {"Authorization": f"Bearer {self.user_token}"}
@@ -185,6 +335,14 @@ class TireStorageAPITester(unittest.TestCase):
                 headers=headers
             )
             self.assertEqual(response.status_code, 403, "User shouldn't be able to release records")
+            
+        # User should not be able to access user management
+        response = requests.get(f"{self.base_url}/api/users", headers=headers)
+        self.assertEqual(response.status_code, 403, "User shouldn't be able to access user management")
+        
+        # User should not be able to export to Excel
+        response = requests.get(f"{self.base_url}/api/storage-records/export/excel", headers=headers)
+        self.assertEqual(response.status_code, 403, "User shouldn't be able to export to Excel")
         
         print("✅ User permission checks passed")
         return True
