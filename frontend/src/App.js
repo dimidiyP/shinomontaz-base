@@ -1834,14 +1834,14 @@ function App() {
                 <strong>Доступные переменные для подстановки:</strong>
               </p>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm text-blue-700">
-                <span>{'{''}full_name{'}'} - ФИО</span>
-                <span>{'{''}phone{'}'} - Телефон</span>
-                <span>{'{''}parameters{'}'} - Параметры</span>
-                <span>{'{''}size{'}'} - Размер</span>
-                <span>{'{''}storage_location{'}'} - Место хранения</span>
-                <span>{'{''}record_number{'}'} - Номер акта</span>
-                <span>{'{''}created_at{'}'} - Дата создания</span>
-                <span>{'{''}car_brand{'}'} - Марка машины</span>
+                <span>{"{"}full_name{"}"} - ФИО</span>
+                <span>{"{"}phone{"}"} - Телефон</span>
+                <span>{"{"}parameters{"}"} - Параметры</span>
+                <span>{"{"}size{"}"} - Размер</span>
+                <span>{"{"}storage_location{"}"} - Место хранения</span>
+                <span>{"{"}record_number{"}"} - Номер акта</span>
+                <span>{"{"}created_at{"}"} - Дата создания</span>
+                <span>{"{"}car_brand{"}"} - Марка машины</span>
               </div>
             </div>
 
