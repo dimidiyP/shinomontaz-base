@@ -100,6 +100,7 @@ class LoginRequest(BaseModel):
     password: str
 
 class StorageRecord(BaseModel):
+    # Static fields that always exist
     full_name: str
     phone: str
     phone_additional: Optional[str] = None
@@ -107,6 +108,7 @@ class StorageRecord(BaseModel):
     parameters: str
     size: str
     storage_location: str
+    # Dynamic fields will be handled separately
 
 class User(BaseModel):
     username: str
