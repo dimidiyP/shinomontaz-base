@@ -299,84 +299,103 @@ async def release_storage_record(record_id: str, current_user = Depends(verify_t
 
 @app.get("/api/storage-records/{record_id}/pdf")
 async def generate_pdf_receipt(record_id: str, current_user = Depends(verify_token)):
-    if "store" not in current_user["permissions"]:
-        raise HTTPException(status_code=403, detail="Insufficient permissions")
-    
-    # Find the record
-    record = storage_records_collection.find_one({"record_id": record_id})
-    if not record:
-        raise HTTPException(status_code=404, detail="Record not found")
-    
-    # Get PDF template
-    template = pdf_template_collection.find_one({}) or {}
-    template_text = template.get("template", "Я {full_name}, {phone}, оставил на хранение {parameters}, {size}, в Шинном Бюро по адресу {storage_location}, номер акта {record_number} {created_at}. Подпись: _________________")
-    
-    # Create PDF
-    buffer = io.BytesIO()
-    p = canvas.Canvas(buffer, pagesize=A4)
-    
-    # Set up font (using default font for now)
-    p.setFont("Helvetica", 12)
-    
-    # Title
-    p.setFont("Helvetica-Bold", 16)
-    p.drawString(50, 750, "АКТ ПРИЕМА НА ХРАНЕНИЕ")
-    
-    # Content
-    p.setFont("Helvetica", 12)
-    y_position = 700
-    
-    # Format template with record data
-    formatted_text = template_text.format(
-        full_name=record.get("full_name", ""),
-        phone=record.get("phone", ""),
-        parameters=record.get("parameters", ""),
-        size=record.get("size", ""),
-        storage_location=record.get("storage_location", ""),
-        record_number=record.get("record_number", ""),
-        created_at=record.get("created_at", datetime.now()).strftime("%d.%m.%Y %H:%M")
-    )
-    
-    # Split text into lines and draw
-    lines = formatted_text.split('\n')
-    for line in lines:
-        if len(line) > 80:  # Wrap long lines
-            words = line.split(' ')
-            current_line = ""
-            for word in words:
-                if len(current_line + word) < 80:
-                    current_line += word + " "
-                else:
+    try:
+        if "store" not in current_user["permissions"]:
+            raise HTTPException(status_code=403, detail="Insufficient permissions")
+        
+        # Find the record
+        record = storage_records_collection.find_one({"record_id": record_id})
+        if not record:
+            raise HTTPException(status_code=404, detail="Record not found")
+        
+        # Get PDF template
+        template = pdf_template_collection.find_one({}) or {}
+        template_text = template.get("template", "Я {full_name}, {phone}, оставил на хранение {parameters}, {size}, в Шинном Бюро по адресу {storage_location}, номер акта {record_number} {created_at}. Подпись: _________________")
+        
+        # Create PDF
+        buffer = io.BytesIO()
+        p = canvas.Canvas(buffer, pagesize=A4)
+        
+        # Set up font (using default font for now)
+        p.setFont("Helvetica", 12)
+        
+        # Title
+        p.setFont("Helvetica-Bold", 16)
+        p.drawString(50, 750, "AKT PRIEMA NA HRANENIE")
+        
+        # Content
+        p.setFont("Helvetica", 12)
+        y_position = 700
+        
+        # Format template with record data - handle datetime properly
+        created_at_str = ""
+        if record.get("created_at"):
+            if isinstance(record["created_at"], datetime):
+                created_at_str = record["created_at"].strftime("%d.%m.%Y %H:%M")
+            else:
+                created_at_str = str(record["created_at"])
+        
+        formatted_text = template_text.format(
+            full_name=record.get("full_name", ""),
+            phone=record.get("phone", ""),
+            parameters=record.get("parameters", ""),
+            size=record.get("size", ""),
+            storage_location=record.get("storage_location", ""),
+            record_number=record.get("record_number", ""),
+            record_id=record.get("record_id", ""),
+            created_at=created_at_str,
+            car_brand=record.get("car_brand", ""),
+            phone_additional=record.get("phone_additional", "")
+        )
+        
+        # Split text into lines and draw
+        lines = formatted_text.split('\n')
+        for line in lines:
+            if len(line) > 80:  # Wrap long lines
+                words = line.split(' ')
+                current_line = ""
+                for word in words:
+                    if len(current_line + word) < 80:
+                        current_line += word + " "
+                    else:
+                        p.drawString(50, y_position, current_line.strip())
+                        y_position -= 20
+                        current_line = word + " "
+                if current_line:
                     p.drawString(50, y_position, current_line.strip())
                     y_position -= 20
-                    current_line = word + " "
-            if current_line:
-                p.drawString(50, y_position, current_line.strip())
+            else:
+                p.drawString(50, y_position, line)
                 y_position -= 20
-        else:
-            p.drawString(50, y_position, line)
-            y_position -= 20
-    
-    # Additional info
-    y_position -= 20
-    p.drawString(50, y_position, f"Дата: {record.get('created_at', datetime.now()).strftime('%d.%m.%Y %H:%M')}")
-    y_position -= 20
-    p.drawString(50, y_position, f"Сотрудник: {record.get('created_by', '')}")
-    
-    # Signature line
-    y_position -= 40
-    p.drawString(50, y_position, "Подпись клиента: _________________________")
-    y_position -= 30
-    p.drawString(50, y_position, "Подпись сотрудника: _________________________")
-    
-    p.save()
-    buffer.seek(0)
-    
-    return StreamingResponse(
-        io.BytesIO(buffer.read()),
-        media_type="application/pdf",
-        headers={"Content-Disposition": f"attachment; filename=act_{record_id}.pdf"}
-    )
+        
+        # Additional info
+        y_position -= 20
+        p.drawString(50, y_position, f"Data: {created_at_str}")
+        y_position -= 20
+        p.drawString(50, y_position, f"Sotrudnik: {record.get('created_by', '')}")
+        
+        # Signature line
+        y_position -= 40
+        p.drawString(50, y_position, "Podpis klienta: _________________________")
+        y_position -= 30
+        p.drawString(50, y_position, "Podpis sotrudnika: _________________________")
+        
+        p.save()
+        buffer.seek(0)
+        
+        return StreamingResponse(
+            io.BytesIO(buffer.read()),
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f"attachment; filename=act_{record_id}.pdf",
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Methods": "GET",
+                "Access-Control-Allow-Headers": "*"
+            }
+        )
+    except Exception as e:
+        print(f"PDF generation error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"PDF generation failed: {str(e)}")
 
 @app.get("/api/storage-records/export/excel")
 async def export_records_excel(current_user = Depends(verify_token)):
