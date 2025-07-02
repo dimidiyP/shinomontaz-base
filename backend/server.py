@@ -542,6 +542,51 @@ async def delete_user(username: str, current_user = Depends(verify_token)):
     
     return {"message": "User deleted successfully"}
 
+@app.put("/api/form-config")
+async def update_form_config(config_data: dict, current_user = Depends(verify_token)):
+    if "form_management" not in current_user["permissions"]:
+        raise HTTPException(status_code=403, detail="Insufficient permissions")
+    
+    fields = config_data.get("fields", [])
+    
+    # Validate that required system fields are present
+    system_fields = ["record_id", "record_number", "status", "created_at", "created_by"]
+    
+    result = form_config_collection.update_one(
+        {},
+        {"$set": {"fields": fields}},
+        upsert=True
+    )
+    
+    return {"message": "Form configuration updated successfully"}
+
+@app.get("/api/pdf-template")
+async def get_pdf_template(current_user = Depends(verify_token)):
+    if "pdf_management" not in current_user["permissions"]:
+        raise HTTPException(status_code=403, detail="Insufficient permissions")
+    
+    template = pdf_template_collection.find_one({})
+    if not template:
+        # Return default template
+        return {"template": "Я {full_name}, {phone}, оставил на хранение {parameters}, {size}, в Шинном Бюро по адресу {storage_location}, номер акта {record_number} {created_at}. Подпись: _________________"}
+    
+    return {"template": template.get("template", "")}
+
+@app.put("/api/pdf-template")
+async def update_pdf_template(template_data: dict, current_user = Depends(verify_token)):
+    if "pdf_management" not in current_user["permissions"]:
+        raise HTTPException(status_code=403, detail="Insufficient permissions")
+    
+    template = template_data.get("template", "")
+    
+    result = pdf_template_collection.update_one(
+        {},
+        {"$set": {"template": template}},
+        upsert=True
+    )
+    
+    return {"message": "PDF template updated successfully"}
+
 # Initialize default data on startup
 init_default_data()
 
