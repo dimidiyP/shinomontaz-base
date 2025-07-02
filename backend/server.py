@@ -588,6 +588,19 @@ async def update_pdf_template(template_data: dict, current_user = Depends(verify
     
     return {"message": "PDF template updated successfully"}
 
+@app.delete("/api/storage-records/{record_id}")
+async def delete_storage_record(record_id: str, current_user = Depends(verify_token)):
+    if "delete_records" not in current_user["permissions"]:
+        raise HTTPException(status_code=403, detail="Insufficient permissions")
+    
+    # Find and delete the record
+    result = storage_records_collection.delete_one({"record_id": record_id})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Record not found")
+    
+    return {"message": "Запись успешно удалена"}
+
 # Initialize default data on startup
 init_default_data()
 
