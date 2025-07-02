@@ -800,8 +800,40 @@ async def delete_storage_record(record_id: str, current_user = Depends(verify_to
     
     return {"message": "Запись успешно удалена"}
 
-# Initialize default data on startup
-init_default_data()
+@app.get("/api/retailcrm/orders")
+async def get_retailcrm_orders(current_user = Depends(verify_token)):
+    if "view" not in current_user["permissions"]:
+        raise HTTPException(status_code=403, detail="Insufficient permissions")
+    
+    orders = []
+    for order in storage_records_collection.find({"source": "retailcrm"}):
+        order["_id"] = str(order["_id"])
+        order["created_at"] = order["created_at"].isoformat()
+        orders.append(order)
+    
+    return {"orders": orders}
+
+@app.post("/api/retailcrm/sync")
+async def manual_retailcrm_sync(current_user = Depends(verify_token)):
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Only admin can trigger manual sync")
+    
+    try:
+        retailcrm.fetch_orders()
+        return {"message": "Manual RetailCRM sync completed successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Sync failed: {str(e)}")
+
+@app.get("/api/retailcrm/status")
+async def get_retailcrm_status(current_user = Depends(verify_token)):
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Only admin can view sync status")
+    
+    return {
+        "scheduler_running": retailcrm.scheduler.running,
+        "api_url": RETAILCRM_API_URL,
+        "last_sync_orders": storage_records_collection.count_documents({"source": "retailcrm"})
+    }
 
 if __name__ == "__main__":
     import uvicorn
