@@ -101,3 +101,89 @@
 #====================================================================================================
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
+
+user_problem_statement: "Пользователь сообщил о 3 проблемах: 1) Ошибка подключения к серверу при печати PDF акта, 2) Новые поля не отображаются в форме создания записи, 3) Требуется интеграция с RetailCRM API для автоматической синхронизации заказов каждые 5 минут"
+
+backend:
+  - task: "PDF generation endpoint"
+    implemented: true
+    working: false
+    file: "server.py"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "user"
+        comment: "Пользователь получает 'Ошибка подключения к серверу' при попытке печати PDF акта"
+        
+  - task: "Dynamic form fields support in record creation"
+    implemented: false
+    working: false
+    file: "server.py" 
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "user"
+        comment: "Новые поля добавленные в конфигурацию формы не отображаются при создании записи"
+
+  - task: "RetailCRM integration API"
+    implemented: false
+    working: "NA"
+    file: "server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Нужно создать интеграцию с RetailCRM для автоматической синхронизации заказов"
+
+frontend:
+  - task: "PDF download functionality"
+    implemented: true
+    working: false
+    file: "App.js"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "user"
+        comment: "Пользователь видит 'Ошибка подключения к серверу' при попытке печати PDF"
+
+  - task: "Dynamic form rendering"
+    implemented: false
+    working: false
+    file: "App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "user"
+        comment: "Форма создания записи не использует динамические поля из конфигурации"
+
+metadata:
+  created_by: "main_agent"
+  version: "1.0"
+  test_sequence: 1
+  run_ui: false
+
+test_plan:
+  current_focus:
+    - "PDF generation endpoint"
+    - "Dynamic form fields support in record creation" 
+    - "PDF download functionality"
+    - "Dynamic form rendering"
+  stuck_tasks:
+    - "PDF generation endpoint"
+    - "PDF download functionality"
+  test_all: false
+  test_priority: "high_first"
+
+agent_communication:
+  - agent: "main"
+    message: "Начинаю исправление 3 проблем: PDF генерация, динамические поля формы, и подготовка к RetailCRM интеграции. Сначала исправлю PDF, затем динамические поля, потом добавлю RetailCRM интеграцию."
