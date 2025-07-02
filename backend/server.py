@@ -835,6 +835,15 @@ async def get_retailcrm_status(current_user = Depends(verify_token)):
         "last_sync_orders": storage_records_collection.count_documents({"source": "retailcrm"})
     }
 
+# Initialize default data on startup
+init_default_data()
+
+# Start RetailCRM scheduler
+try:
+    retailcrm.start_scheduler()
+except Exception as e:
+    logger.error(f"Failed to start RetailCRM scheduler: {str(e)}")
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8001)
