@@ -1310,6 +1310,268 @@ function App() {
                 <strong>Доступные переменные для подстановки:</strong>
               </p>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm text-blue-700">
+                <span>{"{"}full_name{"}"} - ФИО</span>
+                <span>{"{"}phone{"}"} - Телефон</span>
+                <span>{"{"}parameters{"}"} - Параметры</span>
+                <span>{"{"}size{"}"} - Размер</span>
+                <span>{"{"}storage_location{"}"} - Место хранения</span>
+                <span>{"{"}record_number{"}"} - Номер акта</span>
+                <span>{"{"}created_at{"}"} - Дата создания</span>
+                <span>{"{"}car_brand{"}"} - Марка машины</span>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Шаблон PDF акта
+                </label>
+                <textarea
+                  value={pdfTemplate}
+                  onChange={(e) => setPdfTemplate(e.target.value)}
+                  onFocus={async () => {
+                    if (!pdfTemplate) {
+                      try {
+                        const token = localStorage.getItem('token');
+                        const response = await fetch(`${API_BASE_URL}/api/pdf-template`, {
+                          headers: {
+                            'Authorization': `Bearer ${token}`,
+                          },
+                        });
+
+                        if (response.ok) {
+                          const data = await response.json();
+                          setPdfTemplate(data.template);
+                        }
+                      } catch (err) {
+                        setError('Ошибка загрузки шаблона');
+                      }
+                    }
+                  }}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  rows="8"
+                  placeholder="Я {full_name}, {phone}, оставил на хранение {parameters}, {size}, в Шинном Бюро по адресу {storage_location}, номер акта {record_number} {created_at}. Подпись: _________________"
+                />
+              </div>
+
+              <div className="flex space-x-4">
+                <button
+                  onClick={async () => {
+                    try {
+                      const token = localStorage.getItem('token');
+                      const response = await fetch(`${API_BASE_URL}/api/pdf-template`, {
+                        method: 'PUT',
+                        headers: {
+                          'Content-Type': 'application/json',
+                          'Authorization': `Bearer ${token}`,
+                        },
+                        body: JSON.stringify({template: pdfTemplate}),
+                      });
+
+                      if (response.ok) {
+                        setSuccess('Шаблон PDF обновлен');
+                      } else {
+                        setError('Ошибка при обновлении шаблона');
+                      }
+                    } catch (err) {
+                      setError('Ошибка подключения к серверу');
+                    }
+                  }}
+                  className="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-lg font-medium"
+                >
+                  Сохранить шаблон
+                </button>
+                
+                <button
+                  onClick={() => setPdfTemplate('')}
+                  className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg font-medium"
+                >
+                  Сбросить к умолчанию
+                </button>
+              </div>
+
+              {pdfTemplate && (
+                <div className="mt-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                  <h4 className="text-sm font-medium text-gray-700 mb-2">Предварительный просмотр:</h4>
+                  <div className="text-sm text-gray-600 whitespace-pre-wrap">
+                    {pdfTemplate.replace(/{(\w+)}/g, (match, key) => {
+                      const examples = {
+                        full_name: 'Иванов Иван Иванович',
+                        phone: '+7-999-123-45-67',
+                        parameters: '215/60/R16',
+                        size: '4 шт',
+                        storage_location: 'Бекетова 3а.к15',
+                        record_number: '123',
+                        created_at: new Date().toLocaleDateString('ru-RU'),
+                        car_brand: 'Toyota Camry'
+                      };
+                      return examples[key] || match;
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Form Configuration */}
+        {currentPage === 'form-config' && hasPermission('form_management') && (
+          <div className="bg-white rounded-xl shadow-lg p-8">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">Изменение формы записи</h2>
+              <button
+                onClick={() => setCurrentPage('dashboard')}
+                className="text-gray-500 hover:text-gray-700 px-3 py-1 rounded-md text-sm font-medium"
+              >
+                ← Назад
+              </button>
+            </div>
+
+            <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <p className="text-yellow-800 text-sm">
+                <strong>Внимание:</strong> Поля "Уникальный номер", "Время создания", "Статус" и "Фамилия пользователя" нельзя отредактировать или удалить.
+                При удалении поля оно удаляется и у существующих записей.
+              </p>
+            </div>
+
+            {formConfig && (
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Текущие поля формы:</h3>
+                
+                {formConfig.fields.map((field, index) => (
+                  <div key={index} className="border border-gray-200 rounded-lg p-4">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Название поля</label>
+                        <input
+                          type="text"
+                          value={field.name}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-gray-100"
+                          disabled
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Метка</label>
+                        <input
+                          type="text"
+                          value={field.label}
+                          onChange={(e) => {
+                            const newFields = [...formConfig.fields];
+                            newFields[index].label = e.target.value;
+                            setFormConfig({...formConfig, fields: newFields});
+                          }}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Тип</label>
+                        <select
+                          value={field.type}
+                          onChange={(e) => {
+                            const newFields = [...formConfig.fields];
+                            newFields[index].type = e.target.value;
+                            setFormConfig({...formConfig, fields: newFields});
+                          }}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                        >
+                          <option value="text">Текст</option>
+                          <option value="tel">Телефон</option>
+                          <option value="email">Email</option>
+                          <option value="select">Выбор</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Обязательное</label>
+                        <input
+                          type="checkbox"
+                          checked={field.required || false}
+                          onChange={(e) => {
+                            const newFields = [...formConfig.fields];
+                            newFields[index].required = e.target.checked;
+                            setFormConfig({...formConfig, fields: newFields});
+                          }}
+                          className="mt-2"
+                        />
+                      </div>
+                    </div>
+                    
+                    {field.type === 'select' && (
+                      <div className="mt-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Варианты выбора (по одному на строку)</label>
+                        <textarea
+                          value={field.options ? field.options.join('\n') : ''}
+                          onChange={(e) => {
+                            const newFields = [...formConfig.fields];
+                            newFields[index].options = e.target.value.split('\n').filter(o => o.trim());
+                            setFormConfig({...formConfig, fields: newFields});
+                          }}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                          rows="3"
+                        />
+                      </div>
+                    )}
+                  </div>
+                ))}
+
+                <div className="flex space-x-4 mt-6">
+                  <button
+                    onClick={async () => {
+                      try {
+                        const token = localStorage.getItem('token');
+                        const response = await fetch(`${API_BASE_URL}/api/form-config`, {
+                          method: 'PUT',
+                          headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`,
+                          },
+                          body: JSON.stringify({fields: formConfig.fields}),
+                        });
+
+                        if (response.ok) {
+                          setSuccess('Конфигурация формы обновлена');
+                          loadFormConfig();
+                        } else {
+                          setError('Ошибка при обновлении конфигурации');
+                        }
+                      } catch (err) {
+                        setError('Ошибка подключения к серверу');
+                      }
+                    }}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium"
+                  >
+                    Сохранить изменения
+                  </button>
+                  
+                  <button
+                    onClick={() => loadFormConfig()}
+                    className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg font-medium"
+                  >
+                    Отменить изменения
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* PDF Template Configuration */}
+        {currentPage === 'pdf-config' && hasPermission('pdf_management') && (
+          <div className="bg-white rounded-xl shadow-lg p-8">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">Изменение формы Акта</h2>
+              <button
+                onClick={() => setCurrentPage('dashboard')}
+                className="text-gray-500 hover:text-gray-700 px-3 py-1 rounded-md text-sm font-medium"
+              >
+                ← Назад
+              </button>
+            </div>
+
+            <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-blue-800 text-sm mb-2">
+                <strong>Доступные переменные для подстановки:</strong>
+              </p>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm text-blue-700">
                 <span>{'{''}full_name{'}'} - ФИО</span>
                 <span>{'{''}phone{'}'} - Телефон</span>
                 <span>{'{''}parameters{'}'} - Параметры</span>
