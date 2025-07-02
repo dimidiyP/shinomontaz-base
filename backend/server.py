@@ -19,6 +19,11 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 import pandas as pd
 import tempfile
+import requests
+import threading
+import time
+from apscheduler.schedulers.background import BackgroundScheduler
+import logging
 
 # Configuration
 SECRET_KEY = "your-secret-key-here"
