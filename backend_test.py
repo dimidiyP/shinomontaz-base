@@ -1,6 +1,8 @@
 import requests
 import unittest
 import sys
+import io
+import os
 from datetime import datetime
 
 class TireStorageAPITester(unittest.TestCase):
@@ -11,6 +13,7 @@ class TireStorageAPITester(unittest.TestCase):
         self.user_token = None
         self.created_record_id = None
         self.created_record_number = None
+        self.test_user = f"testuser_{datetime.now().strftime('%H%M%S')}"
 
     def setUp(self):
         # Login as admin and user to get tokens
