@@ -1128,7 +1128,8 @@ function App() {
                                permission === 'view' ? 'Просматривать' :
                                permission === 'form_management' ? 'Управлять формами' :
                                permission === 'pdf_management' ? 'Управлять PDF' :
-                               permission === 'user_management' ? 'Управлять пользователями' : permission}
+                               permission === 'user_management' ? 'Управлять пользователями' :
+                               permission === 'delete_records' ? 'Удалять записи' : permission}
                             </span>
                           ))}
                         </div>
