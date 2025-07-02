@@ -380,7 +380,7 @@ async def generate_pdf_receipt(record_id: str, current_user = Depends(verify_tok
 
 @app.get("/api/storage-records/export/excel")
 async def export_records_excel(current_user = Depends(verify_token)):
-    if "view" not in current_user["permissions"]:
+    if "view" not in current_user["permissions"] or current_user["role"] != "admin":
         raise HTTPException(status_code=403, detail="Insufficient permissions")
     
     # Get all records
