@@ -41,6 +41,7 @@ function App() {
   const [createdRecord, setCreatedRecord] = useState(null);
   const [filteredRecords, setFilteredRecords] = useState([]);
   const [filters, setFilters] = useState({});
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
 
   // Users management state
   const [users, setUsers] = useState([]);
@@ -54,6 +55,76 @@ function App() {
   // Form configuration state
   const [editFormConfig, setEditFormConfig] = useState(null);
   const [pdfTemplate, setPdfTemplate] = useState('');
+
+  // Function to sort records
+  const sortRecords = (recordsToSort, key, direction) => {
+    return [...recordsToSort].sort((a, b) => {
+      let aVal = a[key];
+      let bVal = b[key];
+
+      // Handle numbers
+      if (key === 'record_number') {
+        return direction === 'asc' ? aVal - bVal : bVal - aVal;
+      }
+
+      // Handle dates
+      if (key === 'created_at') {
+        aVal = new Date(aVal);
+        bVal = new Date(bVal);
+        return direction === 'asc' ? aVal - bVal : bVal - aVal;
+      }
+
+      // Handle text - Russian first, then English
+      if (typeof aVal === 'string' && typeof bVal === 'string') {
+        aVal = aVal.toLowerCase();
+        bVal = bVal.toLowerCase();
+        
+        const aIsRussian = /[а-я]/.test(aVal);
+        const bIsRussian = /[а-я]/.test(bVal);
+        
+        if (aIsRussian && !bIsRussian) return direction === 'asc' ? -1 : 1;
+        if (!aIsRussian && bIsRussian) return direction === 'asc' ? 1 : -1;
+        
+        return direction === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+      }
+
+      return 0;
+    });
+  };
+
+  // Handle sort click
+  const handleSort = (key) => {
+    let direction = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+    setFilteredRecords(sortRecords(filteredRecords, key, direction));
+  };
+
+  // Delete record function
+  const deleteRecord = async (recordId) => {
+    if (window.confirm('Вы уверены, что хотите удалить эту запись? Это действие нельзя отменить.')) {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_BASE_URL}/api/storage-records/${recordId}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+
+        if (response.ok) {
+          setSuccess('Запись удалена');
+          loadAllRecords();
+        } else {
+          setError('Ошибка при удалении записи');
+        }
+      } catch (err) {
+        setError('Ошибка подключения к серверу');
+      }
+    }
+  };
 
   useEffect(() => {
     const token = localStorage.getItem('token');
