@@ -64,7 +64,7 @@ def init_default_data():
                 "username": "admin",
                 "password": admin_password,
                 "role": "admin",
-                "permissions": ["store", "release", "view", "form_management", "pdf_management", "user_management"]
+                "permissions": ["store", "release", "view", "form_management", "pdf_management", "user_management", "delete_records"]
             },
             {
                 "username": "user", 
