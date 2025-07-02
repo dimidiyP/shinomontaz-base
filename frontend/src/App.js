@@ -39,6 +39,8 @@ function App() {
   // Records state
   const [records, setRecords] = useState([]);
   const [createdRecord, setCreatedRecord] = useState(null);
+  const [filteredRecords, setFilteredRecords] = useState([]);
+  const [filters, setFilters] = useState({});
 
   // Users management state
   const [users, setUsers] = useState([]);
@@ -48,6 +50,212 @@ function App() {
     role: 'user',
     permissions: ['store', 'view']
   });
+
+  // Form configuration state
+  const [editFormConfig, setEditFormConfig] = useState(null);
+  const [pdfTemplate, setPdfTemplate] = useState('');
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    const userData = localStorage.getItem('user');
+    
+    if (token && userData) {
+      setIsAuthenticated(true);
+      setUser(JSON.parse(userData));
+      setCurrentPage('dashboard');
+      loadFormConfig();
+    }
+  }, []);
+
+  useEffect(() => {
+    setFilteredRecords(applyFilters(records, filters));
+  }, [records, filters]);
+
+  const applyFilters = (recordsToFilter, activeFilters) => {
+    return recordsToFilter.filter(record => {
+      return Object.keys(activeFilters).every(key => {
+        if (!activeFilters[key]) return true;
+        const recordValue = record[key]?.toString().toLowerCase() || '';
+        const filterValue = activeFilters[key].toLowerCase();
+        return recordValue.includes(filterValue);
+      });
+    });
+  };
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(loginData),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        localStorage.setItem('token', data.access_token);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        setIsAuthenticated(true);
+        setUser(data.user);
+        setCurrentPage('dashboard');
+        await loadFormConfig();
+      } else {
+        setError(data.detail || 'Ошибка входа');
+      }
+    } catch (err) {
+      setError('Ошибка подключения к серверу');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadFormConfig = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_BASE_URL}/api/form-config`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const config = await response.json();
+        setFormConfig(config);
+        setEditFormConfig(config);
+      }
+    } catch (err) {
+      console.error('Error loading form config:', err);
+    }
+  };
+
+  const handleStorageSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_BASE_URL}/api/storage-records`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(storageData),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setSuccess('Запись успешно создана!');
+        setCreatedRecord(data.record);
+        setStorageData({
+          full_name: '',
+          phone: '',
+          phone_additional: '',
+          car_brand: '',
+          parameters: '',
+          size: '',
+          storage_location: ''
+        });
+      } else {
+        setError(data.detail || 'Ошибка при создании записи');
+      }
+    } catch (err) {
+      setError('Ошибка подключения к серверу');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSearch = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(
+        `${API_BASE_URL}/api/storage-records/search?query=${encodeURIComponent(searchData.query)}&search_type=${searchData.searchType}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setSearchResults(data.records);
+      } else {
+        setError(data.detail || 'Ошибка поиска');
+      }
+    } catch (err) {
+      setError('Ошибка подключения к серверу');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRelease = async (recordId) => {
+    if (window.confirm('Вы уверены, что хотите выдать клиенту? Забрали ли вы акт?')) {
+      setLoading(true);
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_BASE_URL}/api/storage-records/${recordId}/release`, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          setSuccess('Запись успешно выдана с хранения');
+          handleSearch({ preventDefault: () => {} });
+        } else {
+          setError(data.detail || 'Ошибка при выдаче');
+        }
+      } catch (err) {
+        setError('Ошибка подключения к серверу');
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
+  const loadAllRecords = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_BASE_URL}/api/storage-records`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setRecords(data.records);
+      } else {
+        setError(data.detail || 'Ошибка загрузки записей');
+      }
+    } catch (err) {
+      setError('Ошибка подключения к серверу');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // PDF and Excel functions
   const generatePDF = async (recordId) => {
@@ -69,6 +277,7 @@ function App() {
         a.click();
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
+        setSuccess('PDF акт успешно создан');
       } else {
         setError('Ошибка при генерации PDF');
       }
@@ -105,6 +314,37 @@ function App() {
     }
   };
 
+  const handleFileUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_BASE_URL}/api/storage-records/import/excel`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setSuccess(data.message);
+        loadAllRecords();
+      } else {
+        setError(data.detail || 'Ошибка при импорте данных');
+      }
+    } catch (err) {
+      setError('Ошибка подключения к серверу');
+    }
+  };
+
+  // Users management functions
   const loadUsers = async () => {
     try {
       const token = localStorage.getItem('token');
@@ -207,193 +447,6 @@ function App() {
     }
   };
 
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    const userData = localStorage.getItem('user');
-    
-    if (token && userData) {
-      setIsAuthenticated(true);
-      setUser(JSON.parse(userData));
-      setCurrentPage('dashboard');
-      loadFormConfig();
-    }
-  }, []);
-
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(loginData),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        localStorage.setItem('token', data.access_token);
-        localStorage.setItem('user', JSON.stringify(data.user));
-        setIsAuthenticated(true);
-        setUser(data.user);
-        setCurrentPage('dashboard');
-        await loadFormConfig();
-      } else {
-        setError(data.detail || 'Ошибка входа');
-      }
-    } catch (err) {
-      setError('Ошибка подключения к серверу');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadFormConfig = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_BASE_URL}/api/form-config`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (response.ok) {
-        const config = await response.json();
-        setFormConfig(config);
-      }
-    } catch (err) {
-      console.error('Error loading form config:', err);
-    }
-  };
-
-  const handleStorageSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-    setSuccess('');
-
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_BASE_URL}/api/storage-records`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify(storageData),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setSuccess('Запись успешно создана!');
-        setCreatedRecord(data.record);
-        setStorageData({
-          full_name: '',
-          phone: '',
-          phone_additional: '',
-          car_brand: '',
-          parameters: '',
-          size: '',
-          storage_location: ''
-        });
-      } else {
-        setError(data.detail || 'Ошибка при создании записи');
-      }
-    } catch (err) {
-      setError('Ошибка подключения к серверу');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSearch = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(
-        `${API_BASE_URL}/api/storage-records/search?query=${encodeURIComponent(searchData.query)}&search_type=${searchData.searchType}`,
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        }
-      );
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setSearchResults(data.records);
-      } else {
-        setError(data.detail || 'Ошибка поиска');
-      }
-    } catch (err) {
-      setError('Ошибка подключения к серверу');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleRelease = async (recordId) => {
-    if (window.confirm('Вы уверены, что хотите выдать клиенту? Забрали ли вы акт?')) {
-      setLoading(true);
-      try {
-        const token = localStorage.getItem('token');
-        const response = await fetch(`${API_BASE_URL}/api/storage-records/${recordId}/release`, {
-          method: 'PUT',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        });
-
-        const data = await response.json();
-
-        if (response.ok) {
-          setSuccess('Запись успешно выдана с хранения');
-          // Refresh search results
-          handleSearch({ preventDefault: () => {} });
-        } else {
-          setError(data.detail || 'Ошибка при выдаче');
-        }
-      } catch (err) {
-        setError('Ошибка подключения к серверу');
-      } finally {
-        setLoading(false);
-      }
-    }
-  };
-
-  const loadAllRecords = async () => {
-    setLoading(true);
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_BASE_URL}/api/storage-records`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setRecords(data.records);
-      } else {
-        setError(data.detail || 'Ошибка загрузки записей');
-      }
-    } catch (err) {
-      setError('Ошибка подключения к серверу');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
@@ -404,6 +457,11 @@ function App() {
 
   const hasPermission = (permission) => {
     return user && user.permissions.includes(permission);
+  };
+
+  const clearMessages = () => {
+    setError('');
+    setSuccess('');
   };
 
   if (!isAuthenticated) {
@@ -500,7 +558,7 @@ function App() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {hasPermission('store') && (
                 <button
-                  onClick={() => setCurrentPage('store')}
+                  onClick={() => {setCurrentPage('store'); clearMessages();}}
                   className="bg-green-600 hover:bg-green-700 text-white p-6 rounded-xl shadow-lg transition-colors"
                 >
                   <h3 className="text-xl font-semibold mb-2">Записать на хранение</h3>
@@ -510,7 +568,7 @@ function App() {
 
               {hasPermission('release') && (
                 <button
-                  onClick={() => setCurrentPage('release')}
+                  onClick={() => {setCurrentPage('release'); clearMessages();}}
                   className="bg-orange-600 hover:bg-orange-700 text-white p-6 rounded-xl shadow-lg transition-colors"
                 >
                   <h3 className="text-xl font-semibold mb-2">Выдать с хранения</h3>
@@ -523,6 +581,7 @@ function App() {
                   onClick={() => {
                     setCurrentPage('records');
                     loadAllRecords();
+                    clearMessages();
                   }}
                   className="bg-blue-600 hover:bg-blue-700 text-white p-6 rounded-xl shadow-lg transition-colors"
                 >
@@ -536,6 +595,7 @@ function App() {
                   onClick={() => {
                     setCurrentPage('users');
                     loadUsers();
+                    clearMessages();
                   }}
                   className="bg-purple-600 hover:bg-purple-700 text-white p-6 rounded-xl shadow-lg transition-colors"
                 >
@@ -546,7 +606,7 @@ function App() {
 
               {hasPermission('form_management') && (
                 <button
-                  onClick={() => setCurrentPage('form-config')}
+                  onClick={() => {setCurrentPage('form-config'); clearMessages();}}
                   className="bg-indigo-600 hover:bg-indigo-700 text-white p-6 rounded-xl shadow-lg transition-colors"
                 >
                   <h3 className="text-xl font-semibold mb-2">Изменение формы записи</h3>
@@ -556,7 +616,7 @@ function App() {
 
               {hasPermission('pdf_management') && (
                 <button
-                  onClick={() => setCurrentPage('pdf-config')}
+                  onClick={() => {setCurrentPage('pdf-config'); clearMessages();}}
                   className="bg-teal-600 hover:bg-teal-700 text-white p-6 rounded-xl shadow-lg transition-colors"
                 >
                   <h3 className="text-xl font-semibold mb-2">Изменение формы Акта</h3>
@@ -569,14 +629,16 @@ function App() {
 
         {/* Error/Success Messages */}
         {error && (
-          <div className="mb-6 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg">
-            {error}
+          <div className="mb-6 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg flex justify-between items-center">
+            <span>{error}</span>
+            <button onClick={() => setError('')} className="text-red-400 hover:text-red-600">&times;</button>
           </div>
         )}
 
         {success && (
-          <div className="mb-6 bg-green-50 border border-green-200 text-green-600 px-4 py-3 rounded-lg">
-            {success}
+          <div className="mb-6 bg-green-50 border border-green-200 text-green-600 px-4 py-3 rounded-lg flex justify-between items-center">
+            <span>{success}</span>
+            <button onClick={() => setSuccess('')} className="text-green-400 hover:text-green-600">&times;</button>
           </div>
         )}
 
@@ -835,28 +897,69 @@ function App() {
           <div className="bg-white rounded-xl shadow-lg p-8">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold text-gray-900">Просмотр записей</h2>
-              <button
-                onClick={() => setCurrentPage('dashboard')}
-                className="text-gray-500 hover:text-gray-700 px-3 py-1 rounded-md text-sm font-medium"
-              >
-                ← Назад
-              </button>
-            </div>
-
-            {records.length > 0 ? (
-              <div>
-                <div className="mb-4 flex justify-between items-center">
-                  <h3 className="text-lg font-semibold">Записи ({records.length})</h3>
-                  {user?.role === 'admin' && (
+              <div className="flex space-x-4">
+                {user?.role === 'admin' && (
+                  <>
                     <button
                       onClick={exportToExcel}
                       className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium"
                     >
                       Экспорт в Excel
                     </button>
-                  )}
-                </div>
-                <div className="overflow-x-auto">
+                    <label className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium cursor-pointer">
+                      Импорт Excel
+                      <input
+                        type="file"
+                        accept=".xlsx,.xls"
+                        onChange={handleFileUpload}
+                        className="hidden"
+                      />
+                    </label>
+                  </>
+                )}
+                <button
+                  onClick={() => setCurrentPage('dashboard')}
+                  className="text-gray-500 hover:text-gray-700 px-3 py-1 rounded-md text-sm font-medium"
+                >
+                  ← Назад
+                </button>
+              </div>
+            </div>
+
+            {/* Filters */}
+            <div className="mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
+              <input
+                type="text"
+                placeholder="Фильтр по ФИО"
+                onChange={(e) => setFilters({...filters, full_name: e.target.value})}
+                className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+              />
+              <input
+                type="text"
+                placeholder="Фильтр по телефону"
+                onChange={(e) => setFilters({...filters, phone: e.target.value})}
+                className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+              />
+              <select
+                onChange={(e) => setFilters({...filters, status: e.target.value})}
+                className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+              >
+                <option value="">Все статусы</option>
+                <option value="Взята на хранение">Взята на хранение</option>
+                <option value="Выдана с хранения">Выдана с хранения</option>
+              </select>
+              <select
+                onChange={(e) => setFilters({...filters, storage_location: e.target.value})}
+                className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+              >
+                <option value="">Все места</option>
+                <option value="Бекетова 3а.к15">Бекетова 3а.к15</option>
+                <option value="Московское шоссе 22к1">Московское шоссе 22к1</option>
+              </select>
+            </div>
+
+            {filteredRecords.length > 0 ? (
+              <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
@@ -872,7 +975,7 @@ function App() {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {records.map((record) => (
+                    {filteredRecords.map((record) => (
                       <tr key={record.record_id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                           {record.record_number}
@@ -917,6 +1020,135 @@ function App() {
                 {loading ? 'Загрузка записей...' : 'Записи отсутствуют'}
               </div>
             )}
+          </div>
+        )}
+
+        {/* Users Management */}
+        {currentPage === 'users' && hasPermission('user_management') && (
+          <div className="bg-white rounded-xl shadow-lg p-8">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">Управление пользователями</h2>
+              <button
+                onClick={() => setCurrentPage('dashboard')}
+                className="text-gray-500 hover:text-gray-700 px-3 py-1 rounded-md text-sm font-medium"
+              >
+                ← Назад
+              </button>
+            </div>
+
+            {/* Create User Form */}
+            <div className="mb-8 p-6 bg-gray-50 rounded-lg">
+              <h3 className="text-lg font-semibold mb-4">Создать нового пользователя</h3>
+              <form onSubmit={createUser} className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Логин</label>
+                  <input
+                    type="text"
+                    value={newUser.username}
+                    onChange={(e) => setNewUser({...newUser, username: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Пароль</label>
+                  <input
+                    type="password"
+                    value={newUser.password}
+                    onChange={(e) => setNewUser({...newUser, password: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Роль</label>
+                  <select
+                    value={newUser.role}
+                    onChange={(e) => setNewUser({...newUser, role: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                  >
+                    <option value="user">Пользователь</option>
+                    <option value="admin">Администратор</option>
+                  </select>
+                </div>
+                <div className="md:col-span-3">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Права доступа</label>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                    {['store', 'release', 'view', 'form_management', 'pdf_management', 'user_management'].map(permission => (
+                      <label key={permission} className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={newUser.permissions.includes(permission)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setNewUser({...newUser, permissions: [...newUser.permissions, permission]});
+                            } else {
+                              setNewUser({...newUser, permissions: newUser.permissions.filter(p => p !== permission)});
+                            }
+                          }}
+                          className="mr-2"
+                        />
+                        <span className="text-sm">{
+                          permission === 'store' ? 'Записывать' :
+                          permission === 'release' ? 'Выдавать' :
+                          permission === 'view' ? 'Просматривать' :
+                          permission === 'form_management' ? 'Управлять формами' :
+                          permission === 'pdf_management' ? 'Управлять PDF' :
+                          permission === 'user_management' ? 'Управлять пользователями' : permission
+                        }</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+                <div className="md:col-span-3">
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-medium disabled:opacity-50"
+                  >
+                    {loading ? 'Создание...' : 'Создать пользователя'}
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            {/* Users List */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Существующие пользователи</h3>
+              {users.map((userItem) => (
+                <div key={userItem.username} className="border border-gray-200 rounded-lg p-4">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h4 className="font-semibold">{userItem.username}</h4>
+                      <p className="text-sm text-gray-600">Роль: {userItem.role === 'admin' ? 'Администратор' : 'Пользователь'}</p>
+                      <div className="mt-2">
+                        <p className="text-sm text-gray-600">Права:</p>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {userItem.permissions.map(permission => (
+                            <span key={permission} className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
+                              {permission === 'store' ? 'Записывать' :
+                               permission === 'release' ? 'Выдавать' :
+                               permission === 'view' ? 'Просматривать' :
+                               permission === 'form_management' ? 'Управлять формами' :
+                               permission === 'pdf_management' ? 'Управлять PDF' :
+                               permission === 'user_management' ? 'Управлять пользователями' : permission}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                    {userItem.username !== 'admin' && (
+                      <button
+                        onClick={() => deleteUser(userItem.username)}
+                        className="text-red-600 hover:text-red-800 text-sm"
+                      >
+                        Удалить
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>
