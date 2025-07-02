@@ -195,7 +195,7 @@ async def get_form_config(current_user = Depends(verify_token)):
     return config
 
 @app.post("/api/storage-records")
-async def create_storage_record(record: StorageRecord, current_user = Depends(verify_token)):
+async def create_storage_record(record_data: dict, current_user = Depends(verify_token)):
     if "store" not in current_user["permissions"]:
         raise HTTPException(status_code=403, detail="Insufficient permissions")
     
@@ -203,21 +203,35 @@ async def create_storage_record(record: StorageRecord, current_user = Depends(ve
     record_id = str(uuid.uuid4())
     record_number = generate_next_record_id()
     
-    # Create storage record
+    # Get form configuration to validate fields
+    form_config = form_config_collection.find_one({})
+    if not form_config:
+        raise HTTPException(status_code=500, detail="Form configuration not found")
+    
+    # Create storage record with dynamic fields
     storage_data = {
         "record_id": record_id,
         "record_number": record_number,
-        "full_name": record.full_name,
-        "phone": record.phone,
-        "phone_additional": record.phone_additional,
-        "car_brand": record.car_brand,
-        "parameters": record.parameters,
-        "size": record.size,
-        "storage_location": record.storage_location,
         "status": "Взята на хранение",
         "created_at": datetime.now(),
         "created_by": current_user["username"]
     }
+    
+    # Add all fields from form configuration
+    for field in form_config.get("fields", []):
+        field_name = field.get("name")
+        field_value = record_data.get(field_name, "")
+        
+        # Validate required fields
+        if field.get("required", False) and not field_value:
+            raise HTTPException(status_code=400, detail=f"Required field missing: {field.get('label', field_name)}")
+        
+        storage_data[field_name] = field_value
+    
+    # Add any additional custom fields that were sent
+    for key, value in record_data.items():
+        if key not in storage_data and not key.startswith('_'):
+            storage_data[key] = value
     
     result = storage_records_collection.insert_one(storage_data)
     
