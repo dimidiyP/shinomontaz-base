@@ -129,7 +129,157 @@ class User(BaseModel):
     role: str
     permissions: List[str]
 
-# Utility functions
+# RetailCRM Integration Class
+class RetailCRMIntegration:
+    def __init__(self):
+        self.api_url = RETAILCRM_API_URL
+        self.api_key = RETAILCRM_API_KEY
+        self.scheduler = BackgroundScheduler()
+        
+    def fetch_orders(self):
+        """Fetch orders from RetailCRM API v5 with chranenie = 1"""
+        try:
+            url = f"{self.api_url}/api/v5/orders"
+            headers = {
+                'X-API-KEY': self.api_key,
+                'Content-Type': 'application/json'
+            }
+            
+            # Filter orders where custom field 'chranenie' = 1
+            params = {
+                'filter[customFields][chranenie]': '1',
+                'limit': 100
+            }
+            
+            response = requests.get(url, headers=headers, params=params, timeout=30)
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data.get('success') and 'orders' in data:
+                    orders = self.map_order_fields(data['orders'])
+                    self.save_orders(orders)
+                    logger.info(f"Fetched and saved {len(orders)} orders from RetailCRM")
+                else:
+                    logger.warning("No orders found or RetailCRM API returned error")
+            else:
+                logger.error(f"RetailCRM API request failed: {response.status_code} - {response.text}")
+                
+        except Exception as e:
+            logger.error(f"Error fetching orders from RetailCRM: {str(e)}")
+    
+    def map_order_fields(self, orders):
+        """Map RetailCRM fields to our storage record format"""
+        mapped_orders = []
+        
+        for order in orders:
+            try:
+                # Create a storage record format compatible entry
+                storage_record = {
+                    "record_id": str(uuid.uuid4()),
+                    "record_number": self.generate_next_record_id(),
+                    "full_name": self.extract_full_name(order),
+                    "phone": self.extract_phone(order),
+                    "phone_additional": "",
+                    "car_brand": "",  # Will be filled from order data if available
+                    "parameters": self.extract_parameters(order),
+                    "size": self.extract_size(order),
+                    "storage_location": self.extract_storage_location(order),
+                    "status": "Взята на хранение",
+                    "created_at": datetime.now(),
+                    "created_by": "retailcrm_sync",
+                    "custom_field_1751496388330": order.get('number', ''),
+                    "retailcrm_order_id": order.get('id'),
+                    "retailcrm_external_id": order.get('externalId'),
+                    "source": "retailcrm"
+                }
+                
+                mapped_orders.append(storage_record)
+            except Exception as e:
+                logger.error(f"Error mapping order {order.get('id', 'unknown')}: {str(e)}")
+                continue
+        
+        return mapped_orders
+    
+    def extract_full_name(self, order):
+        """Extract full name from order"""
+        first_name = order.get('firstName', '')
+        last_name = order.get('lastName', '')
+        return f"{first_name} {last_name}".strip() or "Не указано"
+    
+    def extract_phone(self, order):
+        """Extract phone from order"""
+        return order.get('phone', '') or order.get('phone1', '') or ""
+    
+    def extract_storage_location(self, order):
+        """Extract storage location from delivery address"""
+        if 'delivery' in order and 'address' in order['delivery']:
+            return order['delivery']['address'].get('text', 'Не указано')
+        return "Не указано"
+    
+    def extract_parameters(self, order):
+        """Extract tire parameters from order items"""
+        if 'items' in order and order['items']:
+            items = []
+            for item in order['items']:
+                offer = item.get('offer', {})
+                name = offer.get('name', item.get('productName', ''))
+                if name:
+                    items.append(name)
+            return ', '.join(items) if items else "Не указано"
+        return "Не указано"
+    
+    def extract_size(self, order):
+        """Extract size/quantity from order items"""
+        if 'items' in order and order['items']:
+            total_quantity = sum(item.get('quantity', 0) for item in order['items'])
+            return f"{total_quantity} шт." if total_quantity > 0 else "Не указано"
+        return "Не указано"
+    
+    def generate_next_record_id(self):
+        """Generate next record ID similar to existing logic"""
+        last_record = storage_records_collection.find_one(
+            {}, 
+            sort=[("record_number", -1)]
+        )
+        
+        if last_record and "record_number" in last_record:
+            return last_record["record_number"] + 1
+        else:
+            return 1
+    
+    def save_orders(self, orders):
+        """Save orders to database, avoid duplicates"""
+        for order in orders:
+            # Check if order already exists by retailcrm_order_id
+            existing = storage_records_collection.find_one({
+                "retailcrm_order_id": order.get("retailcrm_order_id")
+            })
+            
+            if not existing:
+                storage_records_collection.insert_one(order)
+                logger.info(f"Saved new order from RetailCRM: {order.get('custom_field_1751496388330')}")
+            else:
+                logger.debug(f"Order already exists: {order.get('custom_field_1751496388330')}")
+    
+    def start_scheduler(self):
+        """Start the background scheduler"""
+        self.scheduler.add_job(
+            self.fetch_orders,
+            'interval',
+            minutes=5,  # Every 5 minutes as requested
+            id='retailcrm_sync'
+        )
+        self.scheduler.start()
+        logger.info("RetailCRM scheduler started - running every 5 minutes")
+    
+    def stop_scheduler(self):
+        """Stop the scheduler"""
+        if self.scheduler.running:
+            self.scheduler.shutdown()
+            logger.info("RetailCRM scheduler stopped")
+
+# Global RetailCRM instance
+retailcrm = RetailCRMIntegration()
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode = data.copy()
     if expires_delta:
