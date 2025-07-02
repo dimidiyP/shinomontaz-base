@@ -515,11 +515,7 @@ function App() {
             </button>
           </form>
 
-          <div className="mt-6 p-4 bg-gray-50 rounded-lg text-sm text-gray-600">
-            <p><strong>Тестовые данные:</strong></p>
-            <p>Admin: admin / K2enlzuzz2</p>
-            <p>User: user / user</p>
-          </div>
+
         </div>
       </div>
     );
