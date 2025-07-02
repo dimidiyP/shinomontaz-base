@@ -748,100 +748,36 @@ function App() {
             )}
 
             <form onSubmit={handleStorageSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  ФИО *
-                </label>
-                <input
-                  type="text"
-                  value={storageData.full_name}
-                  onChange={(e) => setStorageData({...storageData, full_name: e.target.value})}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Номер телефона *
-                </label>
-                <input
-                  type="tel"
-                  value={storageData.phone}
-                  onChange={(e) => setStorageData({...storageData, phone: e.target.value})}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Доп номер телефона
-                </label>
-                <input
-                  type="tel"
-                  value={storageData.phone_additional}
-                  onChange={(e) => setStorageData({...storageData, phone_additional: e.target.value})}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Марка машины *
-                </label>
-                <input
-                  type="text"
-                  value={storageData.car_brand}
-                  onChange={(e) => setStorageData({...storageData, car_brand: e.target.value})}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Параметры *
-                </label>
-                <input
-                  type="text"
-                  value={storageData.parameters}
-                  onChange={(e) => setStorageData({...storageData, parameters: e.target.value})}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Например: 215/60/R16"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Размер *
-                </label>
-                <input
-                  type="text"
-                  value={storageData.size}
-                  onChange={(e) => setStorageData({...storageData, size: e.target.value})}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Например: 4 шт."
-                  required
-                />
-              </div>
-
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Место хранения *
-                </label>
-                <select
-                  value={storageData.storage_location}
-                  onChange={(e) => setStorageData({...storageData, storage_location: e.target.value})}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  required
-                >
-                  <option value="">Выберите место хранения</option>
-                  <option value="Бекетова 3а.к15">Бекетова 3а.к15</option>
-                  <option value="Московское шоссе 22к1">Московское шоссе 22к1</option>
-                </select>
-              </div>
+              {formConfig && formConfig.fields && formConfig.fields.map((field) => (
+                <div key={field.name} className={field.type === 'select' || field.name === 'parameters' ? "md:col-span-2" : ""}>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    {field.label} {field.required && '*'}
+                  </label>
+                  
+                  {field.type === 'select' ? (
+                    <select
+                      value={storageData[field.name] || ''}
+                      onChange={(e) => setStorageData({...storageData, [field.name]: e.target.value})}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      required={field.required}
+                    >
+                      <option value="">Выберите {field.label.toLowerCase()}</option>
+                      {field.options && field.options.map((option) => (
+                        <option key={option} value={option}>{option}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      type={field.type === 'tel' ? 'tel' : field.type === 'email' ? 'email' : 'text'}
+                      value={storageData[field.name] || ''}
+                      onChange={(e) => setStorageData({...storageData, [field.name]: e.target.value})}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder={`Введите ${field.label.toLowerCase()}`}
+                      required={field.required}
+                    />
+                  )}
+                </div>
+              ))}
 
               <div className="md:col-span-2">
                 <button
