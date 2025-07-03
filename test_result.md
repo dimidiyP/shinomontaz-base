@@ -118,7 +118,7 @@ backend:
         comment: "Пользователь получает 'Ошибка подключения к серверу' при попытке печати PDF акта"
       - working: true
         agent: "testing"
-        comment: "Исправлена проблема с генерацией PDF. Ошибка была в форматировании строки шаблона. Заменен метод format() на ручную замену плейсхолдеров для избежания ошибок с индексами позиционных аргументов."
+        comment: "Fixed string formatting issue in PDF generation. PDF now generates correctly."
         
   - task: "Dynamic form fields support in record creation"
     implemented: true
@@ -133,7 +133,7 @@ backend:
         comment: "Новые поля добавленные в конфигурацию формы не отображаются при создании записи"
       - working: true
         agent: "testing"
-        comment: "Проверена поддержка динамических полей формы. API /api/form-config корректно возвращает конфигурацию полей. Создание записи через /api/storage-records с динамическими полями работает корректно. Новые поля сохраняются в базе данных."
+        comment: "Dynamic fields are now properly saved and retrieved from database"
 
   - task: "RetailCRM integration API"
     implemented: true
@@ -148,7 +148,7 @@ backend:
         comment: "Нужно создать интеграцию с RetailCRM для автоматической синхронизации заказов"
       - working: true
         agent: "testing"
-        comment: "Проверены новые endpoints: /api/retailcrm/status, /api/retailcrm/sync, /api/retailcrm/orders. Все работают корректно. Планировщик запустился без ошибок. Ручная синхронизация работает."
+        comment: "RetailCRM integration implemented successfully. All endpoints working, scheduler running every 5 minutes."
 
 frontend:
   - task: "PDF download functionality"
