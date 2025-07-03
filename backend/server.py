@@ -561,6 +561,11 @@ async def take_to_storage(record_id: str, current_user = Depends(verify_token)):
     if record.get("status") != "Новая":
         raise HTTPException(status_code=400, detail="Can only take records with 'Новая' status")
     
+    # Check if RetailCRM status allows this change
+    retailcrm_status = record.get("retailcrm_status", "")
+    if retailcrm_status and retailcrm_status == "товар на складе С/X":
+        raise HTTPException(status_code=400, detail="Cannot change status - RetailCRM already shows 'товар на складе С/X'")
+    
     # Update to storage status
     update_data = {
         "status": "Взята на хранение",
@@ -568,7 +573,7 @@ async def take_to_storage(record_id: str, current_user = Depends(verify_token)):
         "taken_to_storage_by": current_user["username"]
     }
     
-    # Update RetailCRM status if order number exists
+    # Update RetailCRM status if order number exists and sync allowed
     retailcrm_order_number = record.get("retailcrm_order_number") or record.get("custom_field_1751496388330")
     if retailcrm_order_number and record.get("retailcrm_sync_count", 0) < 3:
         success = retailcrm.update_retailcrm_status(retailcrm_order_number, "товар на складе С/X")
@@ -599,6 +604,11 @@ async def release_storage_record(record_id: str, current_user = Depends(verify_t
     if record.get("status") != "Взята на хранение":
         raise HTTPException(status_code=400, detail="Record is not in storage")
     
+    # Check if RetailCRM status allows this change
+    retailcrm_status = record.get("retailcrm_status", "")
+    if retailcrm_status and retailcrm_status == "выдан клиенту":
+        raise HTTPException(status_code=400, detail="Cannot change status - RetailCRM already shows 'выдан клиенту'")
+    
     # Update to released status
     update_data = {
         "status": "Выдана с хранения",
@@ -606,7 +616,7 @@ async def release_storage_record(record_id: str, current_user = Depends(verify_t
         "released_by": current_user["username"]
     }
     
-    # Update RetailCRM status if order number exists
+    # Update RetailCRM status if order number exists and sync allowed
     retailcrm_order_number = record.get("retailcrm_order_number") or record.get("custom_field_1751496388330")
     if retailcrm_order_number and record.get("retailcrm_sync_count", 0) < 3:
         success = retailcrm.update_retailcrm_status(retailcrm_order_number, "выдан клиенту")
