@@ -140,6 +140,19 @@ function App() {
     const token = localStorage.getItem('token');
     const userData = localStorage.getItem('user');
     
+    // Check if URL contains calculator routes (public access)
+    const path = window.location.pathname;
+    if (path.startsWith('/calculator')) {
+      if (path === '/calculator') {
+        setCurrentPage('public-calculator');
+      } else if (path.includes('/result/')) {
+        const resultId = path.split('/result/')[1];
+        setCurrentPage('calculator-result');
+        // Load result data here if needed
+      }
+      return; // Skip authentication check for calculator pages
+    }
+    
     if (token && userData) {
       setIsAuthenticated(true);
       setUser(JSON.parse(userData));
