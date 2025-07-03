@@ -479,6 +479,10 @@ async def get_storage_records(current_user = Depends(verify_token)):
     for record in storage_records_collection.find({}):
         record["_id"] = str(record["_id"])
         record["created_at"] = record["created_at"].isoformat()
+        
+        # Add retail status text
+        record["retail_status_text"] = retailcrm.get_retailcrm_status_text(record)
+        
         records.append(record)
     
     return {"records": records}
