@@ -849,14 +849,17 @@ async def generate_pdf_receipt(record_id: str, current_user = Depends(verify_tok
         draw_cyrillic_text(p, 350, y_pos, "Хранитель:", "Helvetica", 11)
         y_pos -= 30
         
-        # Signature lines
-        p.line(50, y_pos, 250, y_pos)  # Client signature line
-        p.line(350, y_pos, 550, y_pos)  # Storage signature line
-        y_pos -= 15
-        
-        p.setFont("Helvetica", 9)
-        draw_cyrillic_text(p, 50, y_pos, f"/ {record.get('full_name', '')} /", "Helvetica", 9)
-        draw_cyrillic_text(p, 350, y_pos, f"/ {record.get('created_by', '')} /", "Helvetica", 9)
+        # Add signature lines if this is the signatures section
+        if "Клиент:" in formatted_template and "Хранитель:" in formatted_template:
+            y_pos -= 20
+            # Draw signature lines
+            p.line(50, y_pos, 250, y_pos)  # Client signature line
+            p.line(350, y_pos, 550, y_pos)  # Storage signature line
+            y_pos -= 15
+            
+            p.setFont("Helvetica", 9)
+            draw_cyrillic_text(p, 50, y_pos, f"/ {record.get('full_name', '')} /", "Helvetica", 9)
+            draw_cyrillic_text(p, 350, y_pos, f"/ {record.get('created_by', '')} /", "Helvetica", 9)
         
         # Footer
         y_pos = 50
