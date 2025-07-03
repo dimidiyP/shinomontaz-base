@@ -1746,6 +1746,13 @@ function App() {
                 </button>
                 
                 <button
+                  onClick={loadPdfTemplate}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium"
+                >
+                  Загрузить из базы данных
+                </button>
+                
+                <button
                   onClick={() => setPdfTemplate('')}
                   className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg font-medium"
                 >
