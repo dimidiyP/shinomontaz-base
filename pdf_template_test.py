@@ -83,9 +83,9 @@ class PDFTemplateAPITester(unittest.TestCase):
         print("✅ Template update verified")
         return True
 
-    def test_3_create_record_with_russian_data(self):
-        """Test creating a record with Russian data"""
-        print("\n🔍 Testing Create Record with Russian Data...")
+    def test_3_create_record_and_generate_pdf(self):
+        """Test creating a record with Russian data and generating PDF"""
+        print("\n🔍 Testing Create Record with Russian Data and Generate PDF...")
         headers = {
             "Authorization": f"Bearer {self.admin_token}",
             "Content-Type": "application/json"
@@ -115,44 +115,38 @@ class PDFTemplateAPITester(unittest.TestCase):
         self.assertIn("record_number", data["record"], "Record number not found")
         
         # Save record ID for PDF generation test
-        self.test_record_id = data["record"]["record_id"]
-        self.test_record_number = data["record"]["record_number"]
+        record_id = data["record"]["record_id"]
+        record_number = data["record"]["record_number"]
         
-        print(f"✅ Record created successfully with ID: {self.test_record_id}")
-        print(f"✅ Record number: {self.test_record_number}")
-        return self.test_record_id
-
-    def test_4_generate_pdf_with_custom_template(self):
-        """Test generating PDF with custom template"""
+        print(f"✅ Record created successfully with ID: {record_id}")
+        print(f"✅ Record number: {record_number}")
+        
+        # Now generate PDF with the custom template
         print("\n🔍 Testing Generate PDF with Custom Template...")
-        headers = {"Authorization": f"Bearer {self.admin_token}"}
-        
-        if not self.test_record_id:
-            self.fail("No record ID available for PDF generation test")
         
         try:
-            response = requests.get(
-                f"{self.base_url}/api/storage-records/{self.test_record_id}/pdf", 
+            pdf_response = requests.get(
+                f"{self.base_url}/api/storage-records/{record_id}/pdf", 
                 headers=headers,
                 timeout=30
             )
             
-            self.assertEqual(response.status_code, 200, f"Failed to generate PDF: {response.text if response.status_code != 200 else ''}")
-            self.assertEqual(response.headers['Content-Type'], "application/pdf", "Response is not a PDF")
-            self.assertGreater(len(response.content), 0, "PDF content is empty")
+            self.assertEqual(pdf_response.status_code, 200, f"Failed to generate PDF: {pdf_response.text if pdf_response.status_code != 200 else ''}")
+            self.assertEqual(pdf_response.headers['Content-Type'], "application/pdf", "Response is not a PDF")
+            self.assertGreater(len(pdf_response.content), 0, "PDF content is empty")
             
             # Save PDF to verify it was generated correctly
-            with open(f"test_custom_template_{self.test_record_id}.pdf", "wb") as f:
-                f.write(response.content)
+            with open(f"test_custom_template_{record_id}.pdf", "wb") as f:
+                f.write(pdf_response.content)
                 
-            print(f"✅ PDF generated successfully and saved as test_custom_template_{self.test_record_id}.pdf")
-            print(f"✅ PDF size: {len(response.content)} bytes")
+            print(f"✅ PDF generated successfully and saved as test_custom_template_{record_id}.pdf")
+            print(f"✅ PDF size: {len(pdf_response.content)} bytes")
             return True
         except Exception as e:
             self.fail(f"PDF generation failed with error: {str(e)}")
             return False
 
-    def test_5_restore_default_template(self):
+    def test_4_restore_default_template(self):
         """Test restoring default PDF template"""
         print("\n🔍 Testing Restore Default PDF Template...")
         headers = {
@@ -185,20 +179,12 @@ class PDFTemplateAPITester(unittest.TestCase):
 def run_tests():
     # Create test suite
     suite = unittest.TestSuite()
-    tester = PDFTemplateAPITester()
     
     # Add tests in order
     suite.addTest(PDFTemplateAPITester('test_1_get_pdf_template'))
     suite.addTest(PDFTemplateAPITester('test_2_update_pdf_template'))
-    
-    # Run test_3 first and get the record ID
-    test3 = PDFTemplateAPITester('test_3_create_record_with_russian_data')
-    result3 = unittest.TextTestRunner(verbosity=2).run(unittest.TestSuite([test3]))
-    if result3.wasSuccessful():
-        # Now run test_4 with the record ID
-        suite.addTest(PDFTemplateAPITester('test_4_generate_pdf_with_custom_template'))
-    
-    suite.addTest(PDFTemplateAPITester('test_5_restore_default_template'))
+    suite.addTest(PDFTemplateAPITester('test_3_create_record_and_generate_pdf'))
+    suite.addTest(PDFTemplateAPITester('test_4_restore_default_template'))
     
     # Run tests
     runner = unittest.TextTestRunner(verbosity=2)
@@ -208,7 +194,10 @@ def run_tests():
     print(f"\n📊 Tests passed: {result.testsRun - len(result.errors) - len(result.failures)}/{result.testsRun}")
     
     # Return exit code
-    return 0 if result.wasSuccessful() and result3.wasSuccessful() else 1
+    return 0 if result.wasSuccessful() else 1
+
+if __name__ == "__main__":
+    sys.exit(run_tests())
 
 if __name__ == "__main__":
     sys.exit(run_tests())
