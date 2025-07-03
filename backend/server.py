@@ -182,10 +182,10 @@ class RetailCRMIntegration:
                     "full_name": self.extract_full_name(order),
                     "phone": self.extract_phone(order),
                     "phone_additional": "",
-                    "car_brand": "",  # Will be filled from order data if available
+                    "car_brand": self.extract_car_brand(order),  # From type_avto_zakaz
                     "parameters": self.extract_parameters(order),
                     "size": self.extract_size(order),
-                    "storage_location": self.extract_storage_location(order),
+                    "storage_location": self.extract_storage_location(order),  # From tochka_vydachi
                     "status": "Новая",  # Новый статус для записей из RetailCRM
                     "created_at": datetime.now(),
                     "created_by": "retailcrm_sync",
@@ -194,6 +194,7 @@ class RetailCRMIntegration:
                     "retailcrm_external_id": order.get('externalId'),
                     "retailcrm_order_number": order.get('number', ''),  # Номер заказа CRM
                     "retailcrm_status": order.get('status', ''),  # Текущий статус в RetailCRM
+                    "retailcrm_payment_status": order.get('paymentStatus', ''),  # Статус оплаты
                     "retailcrm_sync_count": 0,  # Счетчик синхронизаций
                     "source": "retailcrm"
                 }
