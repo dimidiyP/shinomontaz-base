@@ -152,6 +152,9 @@ backend:
       - working: true
         agent: "testing"
         comment: "Тестирование кастомного шаблона 'Акт хранения №{record_number}. Клиент: {full_name}, тел: {phone}. Товар: {parameters}, количество: {size}. Дата: {created_at}' показало, что все переменные корректно подставляются в шаблон."
+      - working: true
+        agent: "testing"
+        comment: "Дополнительное тестирование подтвердило, что система шаблонов PDF работает корректно. Успешно сохранен и загружен шаблон 'ТЕСТ: Акт №{record_number} для {full_name}, телефон {phone}'. PDF генерируется с использованием этого шаблона, размер файла около 50 КБ."
         
   - task: "Dynamic form fields support in record creation"
     implemented: true
