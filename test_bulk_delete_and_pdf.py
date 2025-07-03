@@ -46,11 +46,16 @@ class BulkDeleteAndPDFTester(unittest.TestCase):
     def test_1_count_records(self):
         """Test counting records to verify database cleanup"""
         print("\n🔍 Counting records in database...")
+        
+        # Make sure we have a valid token
+        if not self.admin_token:
+            self.admin_login()
+            
         headers = {"Authorization": f"Bearer {self.admin_token}"}
         
         response = requests.get(f"{self.base_url}/api/storage-records", headers=headers)
         
-        self.assertEqual(response.status_code, 200, "Failed to get records")
+        self.assertEqual(response.status_code, 200, f"Failed to get records: {response.text}")
         data = response.json()
         records = data.get("records", [])
         
