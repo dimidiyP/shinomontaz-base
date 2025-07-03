@@ -8,7 +8,13 @@ from datetime import datetime
 class TireStorageAPITester(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(TireStorageAPITester, self).__init__(*args, **kwargs)
-        self.base_url = "https://e08027cd-4173-4964-84cf-47b25afe27fc.preview.emergentagent.com"
+        # Get the backend URL from frontend/.env
+        with open('/app/frontend/.env', 'r') as f:
+            for line in f:
+                if line.startswith('REACT_APP_BACKEND_URL='):
+                    self.base_url = line.strip().split('=')[1].strip('"\'')
+                    break
+        print(f"Using backend URL: {self.base_url}")
         self.admin_token = None
         self.user_token = None
         self.created_record_id = None
