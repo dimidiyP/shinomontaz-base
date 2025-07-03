@@ -26,6 +26,7 @@ jobs:
           
           # Create backup directory if not exists
           mkdir -p /opt/backups &&
+          mkdir -p /opt/test-reports &&
           
           # Create timestamped backup
           BACKUP_NAME="backup_$(date +%Y%m%d_%H%M%S)" &&
@@ -39,6 +40,7 @@ jobs:
             --exclude="node_modules" \
             --exclude=".git" \
             --exclude="*.log" \
+            --exclude="test-reports" \
             /opt/shinomontaz &&
           
           # Keep only last 5 backups
@@ -61,10 +63,38 @@ jobs:
           echo "Deployment completed. Backup saved as: $BACKUP_NAME.tar.gz"
         '
 
-    - name: Health check
+    - name: Wait for services to start
       run: |
-        sleep 45
-        # Try multiple endpoints to ensure everything is working
+        sleep 60
+        echo "⏳ Waiting for services to be ready..."
+
+    - name: Run backend health check
+      run: |
+        echo "🔍 Testing backend health..."
+        curl -f https://baseshinomontaz.ru/api/health || exit 1
+        echo "✅ Backend is healthy"
+
+    - name: Run quick frontend tests
+      run: |
+        ssh -o StrictHostKeyChecking=no root@83.222.18.104 '
+          cd /opt/shinomontaz/tests &&
+          
+          # Install test dependencies if not present
+          if [ ! -d "node_modules" ]; then
+            echo "📦 Installing test dependencies..."
+            yarn install
+          fi &&
+          
+          # Run quick smoke tests
+          echo "🧪 Running quick frontend tests..." &&
+          ./run-tests.sh production quick &&
+          
+          echo "✅ Quick tests completed"
+        '
+
+    - name: Full health check
+      run: |
+        # Test multiple endpoints
         curl -f http://baseshinomontaz.ru/ || curl -f https://baseshinomontaz.ru/api/health || exit 1
 
     - name: Rollback on failure
@@ -99,8 +129,32 @@ jobs:
 
     - name: Notify success
       if: success()
-      run: echo "✅ Deployment successful!"
+      run: echo "✅ Deployment successful with automated testing!"
 
     - name: Notify failure
       if: failure()
       run: echo "❌ Deployment failed and rollback attempted!"
+
+  # Separate job for comprehensive testing (optional)
+  comprehensive-tests:
+    name: Comprehensive Frontend Tests
+    runs-on: ubuntu-latest
+    needs: deploy
+    if: success() && github.event_name == 'workflow_dispatch'
+    
+    steps:
+    - name: Setup SSH
+      uses: webfactory/ssh-agent@v0.7.0
+      with:
+        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+    - name: Run comprehensive tests
+      run: |
+        ssh -o StrictHostKeyChecking=no root@83.222.18.104 '
+          cd /opt/shinomontaz/tests &&
+          
+          echo "🧪 Running comprehensive frontend tests..." &&
+          ./run-tests.sh production all &&
+          
+          echo "✅ Comprehensive tests completed"
+        '
