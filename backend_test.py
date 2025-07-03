@@ -1022,12 +1022,183 @@ class TireStorageAPITester(unittest.TestCase):
         
         return True
 
+def test_30_pdf_template_system(self):
+        """Test PDF template system after fixes"""
+        print("\n🔍 Testing PDF Template System...")
+        headers = {"Authorization": f"Bearer {self.admin_token}"}
+        
+        # Step 1: Get the current PDF template
+        print("Step 1: Getting current PDF template")
+        template_response = requests.get(
+            f"{self.base_url}/api/pdf-template", 
+            headers=headers
+        )
+        
+        self.assertEqual(template_response.status_code, 200, f"Failed to get PDF template: {template_response.text if template_response.status_code != 200 else ''}")
+        template_data = template_response.json()
+        self.assertIn("template", template_data, "Template not found in response")
+        original_template = template_data["template"]
+        
+        print(f"✅ Retrieved current template")
+        print(f"✅ Template starts with: {original_template[:50]}...")
+        
+        # Step 2: Create a test record with Russian data
+        print("\nStep 2: Creating test record with Russian data")
+        storage_data = {
+            "full_name": "Петров Петр Петрович",
+            "phone": "9991234567",
+            "phone_additional": "9998887766",
+            "car_brand": "Лада Веста",
+            "parameters": "Летние шины R18",
+            "size": "4 штуки",
+            "storage_location": "Бекетова 3а.к15"
+        }
+        
+        create_response = requests.post(
+            f"{self.base_url}/api/storage-records", 
+            json=storage_data, 
+            headers=headers
+        )
+        
+        self.assertEqual(create_response.status_code, 200, f"Failed to create test record: {create_response.text if create_response.status_code != 200 else ''}")
+        create_data = create_response.json()
+        test_record_id = create_data["record"]["record_id"]
+        test_record_number = create_data["record"]["record_number"]
+        
+        print(f"✅ Created test record with ID: {test_record_id}")
+        print(f"✅ Record number: {test_record_number}")
+        
+        # Step 3: Generate PDF with current template
+        print("\nStep 3: Generating PDF with current template")
+        pdf_response = requests.get(
+            f"{self.base_url}/api/storage-records/{test_record_id}/pdf", 
+            headers=headers,
+            timeout=30
+        )
+        
+        self.assertEqual(pdf_response.status_code, 200, f"Failed to generate PDF: {pdf_response.text if pdf_response.status_code != 200 else ''}")
+        self.assertEqual(pdf_response.headers['Content-Type'], "application/pdf", "Response is not a PDF")
+        self.assertGreater(len(pdf_response.content), 0, "PDF content is empty")
+        
+        # Save PDF to verify it was generated correctly
+        original_pdf_filename = f"test_original_template_{test_record_id}.pdf"
+        with open(original_pdf_filename, "wb") as f:
+            f.write(pdf_response.content)
+            
+        print(f"✅ PDF generated successfully with original template")
+        print(f"✅ PDF size: {len(pdf_response.content)} bytes")
+        print(f"✅ PDF saved as {original_pdf_filename}")
+        
+        # Step 4: Change the template to something simple
+        print("\nStep 4: Changing template to a simple test template")
+        simple_template = f"ТЕСТ PDF: №{{record_number}}, клиент {{full_name}}"
+        
+        update_response = requests.put(
+            f"{self.base_url}/api/pdf-template", 
+            json={"template": simple_template}, 
+            headers=headers
+        )
+        
+        self.assertEqual(update_response.status_code, 200, f"Failed to update PDF template: {update_response.text if update_response.status_code != 200 else ''}")
+        
+        # Verify the template was updated
+        verify_response = requests.get(
+            f"{self.base_url}/api/pdf-template", 
+            headers=headers
+        )
+        
+        self.assertEqual(verify_response.status_code, 200, "Failed to get updated PDF template")
+        verify_data = verify_response.json()
+        self.assertEqual(verify_data["template"], simple_template, "Template was not updated correctly")
+        
+        print(f"✅ Template updated to: {simple_template}")
+        
+        # Step 5: Generate PDF with new simple template
+        print("\nStep 5: Generating PDF with new simple template")
+        new_pdf_response = requests.get(
+            f"{self.base_url}/api/storage-records/{test_record_id}/pdf", 
+            headers=headers,
+            timeout=30
+        )
+        
+        self.assertEqual(new_pdf_response.status_code, 200, "Failed to generate PDF with new template")
+        self.assertEqual(new_pdf_response.headers['Content-Type'], "application/pdf", "Response is not a PDF")
+        self.assertGreater(len(new_pdf_response.content), 0, "PDF content is empty")
+        
+        # Save PDF to verify it was generated correctly
+        simple_pdf_filename = f"test_simple_template_{test_record_id}.pdf"
+        with open(simple_pdf_filename, "wb") as f:
+            f.write(new_pdf_response.content)
+            
+        print(f"✅ PDF generated successfully with simple template")
+        print(f"✅ PDF size: {len(new_pdf_response.content)} bytes")
+        print(f"✅ PDF saved as {simple_pdf_filename}")
+        
+        # Step 6: Restore the original template
+        print("\nStep 6: Restoring original template")
+        restore_response = requests.put(
+            f"{self.base_url}/api/pdf-template", 
+            json={"template": original_template}, 
+            headers=headers
+        )
+        
+        self.assertEqual(restore_response.status_code, 200, "Failed to restore original PDF template")
+        
+        # Verify the template was restored
+        final_verify_response = requests.get(
+            f"{self.base_url}/api/pdf-template", 
+            headers=headers
+        )
+        
+        self.assertEqual(final_verify_response.status_code, 200, "Failed to get restored PDF template")
+        final_verify_data = final_verify_response.json()
+        self.assertEqual(final_verify_data["template"], original_template, "Original template was not restored correctly")
+        
+        print(f"✅ Original template restored successfully")
+        
+        # Step 7: Generate PDF with restored template
+        print("\nStep 7: Generating PDF with restored template")
+        restored_pdf_response = requests.get(
+            f"{self.base_url}/api/storage-records/{test_record_id}/pdf", 
+            headers=headers,
+            timeout=30
+        )
+        
+        self.assertEqual(restored_pdf_response.status_code, 200, "Failed to generate PDF with restored template")
+        self.assertEqual(restored_pdf_response.headers['Content-Type'], "application/pdf", "Response is not a PDF")
+        self.assertGreater(len(restored_pdf_response.content), 0, "PDF content is empty")
+        
+        # Save PDF to verify it was generated correctly
+        restored_pdf_filename = f"test_restored_template_{test_record_id}.pdf"
+        with open(restored_pdf_filename, "wb") as f:
+            f.write(restored_pdf_response.content)
+            
+        print(f"✅ PDF generated successfully with restored template")
+        print(f"✅ PDF size: {len(restored_pdf_response.content)} bytes")
+        print(f"✅ PDF saved as {restored_pdf_filename}")
+        
+        # Add this record ID to bulk delete list for cleanup
+        self.bulk_delete_record_ids.append(test_record_id)
+        
+        # Compare PDF sizes to verify they are different
+        print("\nComparing PDF sizes to verify template changes were applied:")
+        print(f"Original template PDF size: {len(pdf_response.content)} bytes")
+        print(f"Simple template PDF size: {len(new_pdf_response.content)} bytes")
+        print(f"Restored template PDF size: {len(restored_pdf_response.content)} bytes")
+        
+        # The simple template should produce a smaller PDF than the original template
+        self.assertNotEqual(len(pdf_response.content), len(new_pdf_response.content), 
+                           "PDF sizes should be different with different templates")
+        
+        return True
+
 def run_tests():
     # Create test suite
     suite = unittest.TestSuite()
     tester = TireStorageAPITester()
     
     # Add tests in order
+    suite.addTest(TireStorageAPITester('test_30_pdf_template_system'))
     suite.addTest(TireStorageAPITester('test_1_get_form_config'))
     
     # Test phone field with 14 digits
