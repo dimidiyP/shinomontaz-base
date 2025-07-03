@@ -167,9 +167,9 @@ backend:
         
   - task: "Detailed record view with retail_status_text"
     implemented: true
-    working: true
-    file: "server.py"
-    stuck_count: 0
+    working: false
+    file: "App.js"
+    stuck_count: 1
     priority: "high"
     needs_retesting: false
     status_history:
@@ -179,12 +179,15 @@ backend:
       - working: true
         agent: "testing"
         comment: "Тестирование GET /api/storage-records/{record_id} показало, что endpoint возвращает полную информацию о записи, включая retail_status_text. Все работает корректно."
+      - working: false
+        agent: "testing"
+        comment: "Не удалось протестировать детальный просмотр записи через UI, так как номера записей в таблице не кликабельны. В коде предусмотрено, что номера записей должны быть кликабельными и открывать модальное окно с детальной информацией, но эта функциональность не работает."
         
   - task: "Status transitions for storage records"
     implemented: true
-    working: true
-    file: "server.py"
-    stuck_count: 0
+    working: false
+    file: "App.js"
+    stuck_count: 1
     priority: "high"
     needs_retesting: false
     status_history:
@@ -194,11 +197,14 @@ backend:
       - working: true
         agent: "testing"
         comment: "Тестирование PUT /api/storage-records/{record_id}/take-storage показало, что endpoint корректно переводит запись из 'Новая' в 'Взята на хранение'. Endpoint PUT /api/storage-records/{record_id}/release также работает корректно для выдачи с хранения."
+      - working: false
+        agent: "testing"
+        comment: "Не удалось протестировать кнопки перевода записей между статусами через UI, так как не работает функционал детального просмотра записей. Номера записей в таблице не кликабельны, поэтому нет доступа к модальному окну с кнопками 'Взять на хранение' и 'Выдать с хранения'."
         
   - task: "Export and import with record_number and retail_status_text"
     implemented: true
     working: true
-    file: "server.py"
+    file: "App.js"
     stuck_count: 0
     priority: "medium"
     needs_retesting: false
@@ -209,6 +215,39 @@ backend:
       - working: true
         agent: "testing"
         comment: "Тестирование GET /api/storage-records/export/excel показало, что экспорт включает record_number первой колонкой и retail_status_text. Импорт через POST /api/storage-records/import/excel также работает корректно и обрабатывает дубликаты."
+      - working: true
+        agent: "testing"
+        comment: "Кнопки экспорта и импорта Excel присутствуют в интерфейсе на странице просмотра записей и визуально доступны."
+        
+  - task: "Phone field limitation"
+    implemented: true
+    working: true
+    file: "App.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Необходимо проверить ограничение поля телефона до 10 символов"
+      - working: true
+        agent: "testing"
+        comment: "Тестирование показало, что поле телефона успешно ограничивается до 10 символов. При попытке ввести более 10 цифр, поле принимает только первые 10."
+        
+  - task: "Drag & Drop в редакторе полей"
+    implemented: true
+    working: false
+    file: "App.js"
+    stuck_count: 1
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Необходимо проверить функциональность Drag & Drop в редакторе полей формы"
+      - working: false
+        agent: "testing"
+        comment: "Не удалось обнаружить элементы Drag & Drop в редакторе полей. Символы '≡' для перетаскивания отсутствуют, и элементы не имеют атрибута draggable='true'. Функциональность перетаскивания полей для изменения порядка не работает."
 
 frontend:
   - task: "PDF download functionality"
