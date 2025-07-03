@@ -60,6 +60,10 @@ function App() {
   // Record detail state
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [showRecordDetail, setShowRecordDetail] = useState(false);
+  
+  // Bulk operations state
+  const [bulkMode, setBulkMode] = useState(false);
+  const [selectedRecords, setSelectedRecords] = useState(new Set());
 
   // Function to sort records
   const sortRecords = (recordsToSort, key, direction) => {
