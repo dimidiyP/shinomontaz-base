@@ -295,11 +295,14 @@ metadata:
 test_plan:
   current_focus:
     - "PDF download functionality"
-    - "Dynamic form rendering"
     - "Detailed record view with retail_status_text"
     - "Status transitions for storage records"
-    - "Export and import with record_number and retail_status_text"
-  stuck_tasks: []
+    - "Drag & Drop в редакторе полей"
+  stuck_tasks:
+    - "PDF download functionality"
+    - "Detailed record view with retail_status_text"
+    - "Status transitions for storage records"
+    - "Drag & Drop в редакторе полей"
   test_all: false
   test_priority: "high_first"
 
