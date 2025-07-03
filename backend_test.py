@@ -75,6 +75,12 @@ class TireStorageAPITester(unittest.TestCase):
         print("\n🔍 Testing Create Storage Record...")
         headers = {"Authorization": f"Bearer {self.admin_token}"}
         
+        # First, get the form configuration to see what fields are available
+        form_config_response = requests.get(f"{self.base_url}/api/form-config", headers=headers)
+        self.assertEqual(form_config_response.status_code, 200, "Failed to get form config")
+        form_config = form_config_response.json()
+        
+        # Prepare basic storage data
         storage_data = {
             "full_name": "Иванов Иван Иванович",
             "phone": "+7-999-123-45-67",
@@ -85,13 +91,26 @@ class TireStorageAPITester(unittest.TestCase):
             "storage_location": "Бекетова 3а.к15"
         }
         
+        # Add any custom fields from form config
+        for field in form_config.get("fields", []):
+            field_name = field.get("name")
+            if field_name not in storage_data and field.get("required", False):
+                # Add a default value for required fields not already in storage_data
+                if field.get("type") == "text":
+                    storage_data[field_name] = f"Test value for {field_name}"
+                elif field.get("type") == "select" and field.get("options"):
+                    storage_data[field_name] = field.get("options")[0]
+        
+        # Add a custom dynamic field for testing
+        storage_data["custom_field_1751496388330"] = "Test dynamic field value"
+        
         response = requests.post(
             f"{self.base_url}/api/storage-records", 
             json=storage_data, 
             headers=headers
         )
         
-        self.assertEqual(response.status_code, 200, "Failed to create storage record")
+        self.assertEqual(response.status_code, 200, f"Failed to create storage record: {response.text if response.status_code != 200 else ''}")
         data = response.json()
         self.assertIn("record", data, "Record not found in response")
         self.assertIn("record_id", data["record"], "Record ID not found")
@@ -100,12 +119,17 @@ class TireStorageAPITester(unittest.TestCase):
         self.assertIn("created_at", data["record"], "Created at timestamp not found")
         self.assertIn("created_by", data["record"], "Creator username not found")
         
+        # Verify custom field was saved
+        self.assertIn("custom_field_1751496388330", data["record"], "Custom field not found in created record")
+        self.assertEqual(data["record"]["custom_field_1751496388330"], "Test dynamic field value", "Custom field value is incorrect")
+        
         # Save record ID for later tests
         self.created_record_id = data["record"]["record_id"]
         self.created_record_number = data["record"]["record_number"]
         
         print(f"✅ Storage record created successfully with ID: {self.created_record_id}")
         print(f"✅ Record number: {self.created_record_number}")
+        print(f"✅ Custom field saved successfully")
         return True
 
     def test_3_search_by_name(self):
