@@ -461,11 +461,11 @@ def run_tests():
     # Add tests in order
     suite.addTest(TireStorageAPITester('test_1_get_form_config'))
     suite.addTest(TireStorageAPITester('test_2_create_storage_record'))
+    suite.addTest(TireStorageAPITester('test_7_generate_pdf'))  # Move PDF test right after record creation
     suite.addTest(TireStorageAPITester('test_3_search_by_name'))
     suite.addTest(TireStorageAPITester('test_4_search_by_phone'))
     suite.addTest(TireStorageAPITester('test_5_get_all_records'))
     suite.addTest(TireStorageAPITester('test_6_release_record'))
-    suite.addTest(TireStorageAPITester('test_7_generate_pdf'))
     suite.addTest(TireStorageAPITester('test_8_excel_export'))
     suite.addTest(TireStorageAPITester('test_9_create_user'))
     suite.addTest(TireStorageAPITester('test_10_update_user_permissions'))
