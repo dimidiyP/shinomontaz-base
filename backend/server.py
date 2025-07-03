@@ -490,81 +490,161 @@ async def generate_pdf_receipt(record_id: str, current_user = Depends(verify_tok
         
         # Get PDF template
         template = pdf_template_collection.find_one({}) or {}
-        template_text = template.get("template", "Я {full_name}, {phone}, оставил на хранение {parameters}, {size}, в Шинном Бюро по адресу {storage_location}, номер акта {record_number} {created_at}. Подпись: _________________")
+        template_text = template.get("template", "Я {full_name}, {phone}, оставил на хранение {parameters}, {size}, в Шинном Бюро по адресу {storage_location}. Подпись: _________________")
         
         # Create PDF
         buffer = io.BytesIO()
         p = canvas.Canvas(buffer, pagesize=A4)
         
-        # Set up font (using default font for now)
+        # Page dimensions
+        width, height = A4
+        
+        # Set up fonts and colors
+        p.setFont("Helvetica-Bold", 18)
+        
+        # Header with record number
+        p.setFillColor((0, 0, 0))
+        p.drawString(50, height - 50, f"АКТ ПРИЕМА НА ХРАНЕНИЕ № {record.get('record_number', '')}")
+        
+        # Date and location
         p.setFont("Helvetica", 12)
-        
-        # Title
-        p.setFont("Helvetica-Bold", 16)
-        p.drawString(50, 750, "AKT PRIEMA NA HRANENIE")
-        
-        # Content
-        p.setFont("Helvetica", 12)
-        y_position = 700
-        
-        # Format template with record data - handle datetime properly
         created_at_str = ""
         if record.get("created_at"):
             if isinstance(record["created_at"], datetime):
-                created_at_str = record["created_at"].strftime("%d.%m.%Y %H:%M")
+                created_at_str = record["created_at"].strftime("%d.%m.%Y")
             else:
                 created_at_str = str(record["created_at"])
         
-        # Use a dictionary for string formatting to avoid positional argument issues
-        format_dict = {
-            "full_name": record.get("full_name", ""),
-            "phone": record.get("phone", ""),
-            "parameters": record.get("parameters", ""),
-            "size": record.get("size", ""),
-            "storage_location": record.get("storage_location", ""),
-            "record_number": record.get("record_number", ""),
-            "record_id": record.get("record_id", ""),
-            "created_at": created_at_str,
-            "car_brand": record.get("car_brand", ""),
-            "phone_additional": record.get("phone_additional", "")
-        }
+        p.drawString(50, height - 80, f"г. Нижний Новгород")
+        p.drawString(400, height - 80, f'"{created_at_str}"')
         
-        # Use named placeholders for string formatting
-        formatted_text = template_text
-        for key, value in format_dict.items():
-            formatted_text = formatted_text.replace("{" + key + "}", str(value))
+        # Main content
+        p.setFont("Helvetica", 11)
+        y_pos = height - 120
         
-        # Split text into lines and draw
-        lines = formatted_text.split('\n')
-        for line in lines:
-            if len(line) > 80:  # Wrap long lines
-                words = line.split(' ')
-                current_line = ""
-                for word in words:
-                    if len(current_line + word) < 80:
-                        current_line += word + " "
-                    else:
-                        p.drawString(50, y_position, current_line.strip())
-                        y_position -= 20
-                        current_line = word + " "
-                if current_line:
-                    p.drawString(50, y_position, current_line.strip())
-                    y_position -= 20
-            else:
-                p.drawString(50, y_position, line)
-                y_position -= 20
+        # Introduction
+        intro_text = f"Мы, нижеподписавшиеся:"
+        p.drawString(50, y_pos, intro_text)
+        y_pos -= 25
         
-        # Additional info
-        y_position -= 20
-        p.drawString(50, y_position, f"Data: {created_at_str}")
-        y_position -= 20
-        p.drawString(50, y_position, f"Sotrudnik: {record.get('created_by', '')}")
+        p.drawString(50, y_pos, f"1. {record.get('full_name', '')}, именуемый в дальнейшем \"Клиент\",")
+        y_pos -= 20
+        p.drawString(50, y_pos, f"2. {record.get('created_by', '')}, именуемый в дальнейшем \"Хранитель\",")
+        y_pos -= 30
         
-        # Signature line
-        y_position -= 40
-        p.drawString(50, y_position, "Podpis klienta: _________________________")
-        y_position -= 30
-        p.drawString(50, y_position, "Podpis sotrudnika: _________________________")
+        p.drawString(50, y_pos, "составили настоящий акт о нижеследующем:")
+        y_pos -= 40
+        
+        # Section 1: Subject
+        p.setFont("Helvetica-Bold", 12)
+        p.drawString(50, y_pos, "1. ПРЕДМЕТ АКТА:")
+        y_pos -= 20
+        p.setFont("Helvetica", 11)
+        p.drawString(50, y_pos, "Клиент передает, а Хранитель принимает на хранение автомобильные шины")
+        y_pos -= 15
+        p.drawString(50, y_pos, "в количестве и на условиях, указанных ниже.")
+        y_pos -= 30
+        
+        # Section 2: Item details
+        p.setFont("Helvetica-Bold", 12)
+        p.drawString(50, y_pos, "2. ИНФОРМАЦИЯ О ТОВАРЕ:")
+        y_pos -= 25
+        p.setFont("Helvetica", 11)
+        
+        # Create formatted details table
+        details = [
+            ("Параметры шин:", record.get("parameters", "")),
+            ("Количество:", record.get("size", "")),
+            ("Автомобиль:", record.get("car_brand", "")),
+            ("Телефон клиента:", record.get("phone", "")),
+            ("Доп. телефон:", record.get("phone_additional", "") or "не указан"),
+        ]
+        
+        for label, value in details:
+            p.drawString(50, y_pos, f"{label}")
+            p.drawString(180, y_pos, str(value))
+            y_pos -= 18
+        
+        y_pos -= 20
+        
+        # Section 3: Storage conditions
+        p.setFont("Helvetica-Bold", 12)
+        p.drawString(50, y_pos, "3. УСЛОВИЯ ХРАНЕНИЯ:")
+        y_pos -= 20
+        p.setFont("Helvetica", 11)
+        p.drawString(50, y_pos, f"Место хранения: {record.get('storage_location', '')}")
+        y_pos -= 18
+        p.drawString(50, y_pos, "Срок хранения: согласно договору")
+        y_pos -= 18
+        p.drawString(50, y_pos, f"Дата приема: {created_at_str}")
+        y_pos -= 30
+        
+        # Custom template text if provided
+        if template_text and template_text != "Я {full_name}, {phone}, оставил на хранение {parameters}, {size}, в Шинном Бюро по адресу {storage_location}. Подпись: _________________":
+            p.setFont("Helvetica-Bold", 12)
+            p.drawString(50, y_pos, "4. ДОПОЛНИТЕЛЬНЫЕ УСЛОВИЯ:")
+            y_pos -= 20
+            p.setFont("Helvetica", 11)
+            
+            # Format custom template
+            formatted_template = template_text
+            placeholders = {
+                "full_name": record.get("full_name", ""),
+                "phone": record.get("phone", ""),
+                "parameters": record.get("parameters", ""),
+                "size": record.get("size", ""),
+                "storage_location": record.get("storage_location", ""),
+                "record_number": str(record.get("record_number", "")),
+                "record_id": record.get("record_id", ""),
+                "created_at": created_at_str,
+                "car_brand": record.get("car_brand", ""),
+                "phone_additional": record.get("phone_additional", "")
+            }
+            
+            for key, value in placeholders.items():
+                formatted_template = formatted_template.replace("{" + key + "}", str(value))
+            
+            # Split long lines
+            words = formatted_template.split(' ')
+            line = ""
+            for word in words:
+                if len(line + word) < 85:
+                    line += word + " "
+                else:
+                    p.drawString(50, y_pos, line.strip())
+                    y_pos -= 15
+                    line = word + " "
+            if line:
+                p.drawString(50, y_pos, line.strip())
+                y_pos -= 30
+        
+        # Signatures section
+        y_pos = max(y_pos, 150)  # Ensure enough space for signatures
+        
+        p.setFont("Helvetica-Bold", 12)
+        p.drawString(50, y_pos, "ПОДПИСИ СТОРОН:")
+        y_pos -= 40
+        
+        p.setFont("Helvetica", 11)
+        p.drawString(50, y_pos, "Клиент:")
+        p.drawString(350, y_pos, "Хранитель:")
+        y_pos -= 30
+        
+        # Signature lines
+        p.line(50, y_pos, 250, y_pos)  # Client signature line
+        p.line(350, y_pos, 550, y_pos)  # Storage signature line
+        y_pos -= 15
+        
+        p.setFont("Helvetica", 9)
+        p.drawString(50, y_pos, f"/ {record.get('full_name', '')} /")
+        p.drawString(350, y_pos, f"/ {record.get('created_by', '')} /")
+        
+        # Footer
+        y_pos = 50
+        p.setFont("Helvetica", 8)
+        p.setFillColor((0.5, 0.5, 0.5))
+        p.drawString(50, y_pos, f"Документ создан: {datetime.now().strftime('%d.%m.%Y %H:%M')}")
+        p.drawString(400, y_pos, f"ID записи: {record.get('record_id', '')}")
         
         p.save()
         buffer.seek(0)
@@ -573,7 +653,7 @@ async def generate_pdf_receipt(record_id: str, current_user = Depends(verify_tok
             io.BytesIO(buffer.read()),
             media_type="application/pdf",
             headers={
-                "Content-Disposition": f"attachment; filename=act_{record_id}.pdf",
+                "Content-Disposition": f"attachment; filename=act_storage_{record.get('record_number', 'unknown')}.pdf",
                 "Access-Control-Allow-Origin": "*",
                 "Access-Control-Allow-Methods": "GET",
                 "Access-Control-Allow-Headers": "*"
