@@ -213,9 +213,9 @@ backend:
 frontend:
   - task: "PDF download functionality"
     implemented: true
-    working: true
+    working: false
     file: "App.js"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
     needs_retesting: false
     status_history:
@@ -225,6 +225,9 @@ frontend:
       - working: true
         agent: "testing"
         comment: "Тестирование через прямые API вызовы подтвердило, что backend PDF генерация работает корректно. Проблема была в backend, а не в frontend. Ошибка исправлена."
+      - working: false
+        agent: "testing"
+        comment: "Не удалось протестировать PDF генерацию через UI, так как не работает функционал детального просмотра записей. Номера записей в таблице не кликабельны, хотя в коде они должны быть кликабельными и открывать модальное окно."
 
   - task: "Dynamic form rendering"
     implemented: true
@@ -240,6 +243,9 @@ frontend:
       - working: true
         agent: "testing"
         comment: "Тестирование через прямые API вызовы подтвердило, что backend поддерживает динамические поля и корректно сохраняет их в БД. Проблема была в backend, а не в frontend. Ошибка исправлена."
+      - working: true
+        agent: "testing"
+        comment: "Форма создания записи успешно загружается и отображает поля. Динамические поля отображаются корректно."
 
 metadata:
   created_by: "main_agent"
