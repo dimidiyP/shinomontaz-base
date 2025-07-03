@@ -122,6 +122,9 @@ backend:
       - working: true
         agent: "testing"
         comment: "Дополнительное тестирование через прямые API вызовы подтвердило, что PDF генерация работает корректно. PDF файл успешно создается и скачивается размером 1978 байт."
+      - working: true
+        agent: "testing"
+        comment: "Тестирование обновленного PDF endpoint показало, что он работает корректно. PDF генерируется с номером записи и красивой версткой. Размер файла около 2498 байт."
         
   - task: "Dynamic form fields support in record creation"
     implemented: true
@@ -158,6 +161,54 @@ backend:
       - working: true
         agent: "testing"
         comment: "Дополнительное тестирование через прямые API вызовы подтвердило, что RetailCRM интеграция работает корректно. Планировщик запущен и выполняет синхронизацию каждые 5 минут. Ручная синхронизация также работает без ошибок."
+      - working: true
+        agent: "testing"
+        comment: "Тестирование RetailCRM функций показало, что все методы класса RetailCRMIntegration работают корректно. Статус синхронизации отображается правильно, ручная синхронизация работает."
+        
+  - task: "Detailed record view with retail_status_text"
+    implemented: true
+    working: true
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Необходимо реализовать детальный просмотр записи с retail_status_text"
+      - working: true
+        agent: "testing"
+        comment: "Тестирование GET /api/storage-records/{record_id} показало, что endpoint возвращает полную информацию о записи, включая retail_status_text. Все работает корректно."
+        
+  - task: "Status transitions for storage records"
+    implemented: true
+    working: true
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Необходимо реализовать новые статусы и кнопки для перевода записей между статусами"
+      - working: true
+        agent: "testing"
+        comment: "Тестирование PUT /api/storage-records/{record_id}/take-storage показало, что endpoint корректно переводит запись из 'Новая' в 'Взята на хранение'. Endpoint PUT /api/storage-records/{record_id}/release также работает корректно для выдачи с хранения."
+        
+  - task: "Export and import with record_number and retail_status_text"
+    implemented: true
+    working: true
+    file: "server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Необходимо обновить экспорт и импорт для включения record_number и retail_status_text"
+      - working: true
+        agent: "testing"
+        comment: "Тестирование GET /api/storage-records/export/excel показало, что экспорт включает record_number первой колонкой и retail_status_text. Импорт через POST /api/storage-records/import/excel также работает корректно и обрабатывает дубликаты."
 
 frontend:
   - task: "PDF download functionality"
