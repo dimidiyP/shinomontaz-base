@@ -876,7 +876,7 @@ function App() {
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder={`Введите ${field.label.toLowerCase()}`}
                       required={field.required}
-                      maxLength={field.name === 'phone' || field.name === 'phone_additional' ? 10 : undefined}
+                      maxLength={field.name === 'phone' || field.name === 'phone_additional' ? 14 : undefined}
                     />
                   )}
                 </div>
