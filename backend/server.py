@@ -137,7 +137,7 @@ class RetailCRMIntegration:
         self.scheduler = BackgroundScheduler()
         
     def fetch_orders(self):
-        """Fetch orders from RetailCRM API v5 with chranenie = 1, status = 'товар на складе' and paymentStatus = 'paid'"""
+        """Fetch orders from RetailCRM API v5 with chranenie = 1, status = 'товар на выдачу' and paymentStatus = 'paid'"""
         try:
             url = f"{self.api_url}/api/v5/orders"
             headers = {
@@ -145,10 +145,10 @@ class RetailCRMIntegration:
                 'Content-Type': 'application/json'
             }
             
-            # Filter orders where custom field 'chranenie' = 1, status = 'товар на складе', and paymentStatus = 'paid'
+            # Filter orders where custom field 'chranenie' = 1, status = 'товар на выдачу', and paymentStatus = 'paid'
             params = {
                 'filter[customFields][chranenie]': '1',
-                'filter[status]': 'товар на складе',
+                'filter[status]': 'товар на выдачу',
                 'filter[paymentStatus]': 'paid',
                 'limit': 100
             }
