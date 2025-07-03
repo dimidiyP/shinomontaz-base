@@ -1199,6 +1199,26 @@ async def update_pdf_template(template_data: dict, current_user = Depends(verify
     
     return {"message": "PDF template updated successfully"}
 
+@app.delete("/api/storage-records/bulk")
+async def bulk_delete_records(record_ids: List[str], current_user = Depends(verify_token)):
+    if "delete_records" not in current_user["permissions"]:
+        raise HTTPException(status_code=403, detail="Insufficient permissions")
+    
+    if not record_ids:
+        raise HTTPException(status_code=400, detail="No record IDs provided")
+    
+    try:
+        # Delete records by IDs
+        result = storage_records_collection.delete_many({"record_id": {"$in": record_ids}})
+        
+        return {
+            "message": f"Удалено {result.deleted_count} записей",
+            "deleted_count": result.deleted_count
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to delete records: {str(e)}")
+
 @app.delete("/api/storage-records/{record_id}")
 async def delete_storage_record(record_id: str, current_user = Depends(verify_token)):
     if "delete_records" not in current_user["permissions"]:
