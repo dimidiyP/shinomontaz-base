@@ -314,6 +314,9 @@ backend:
       - working: true
         agent: "testing"
         comment: "Тестирование показало, что endpoint DELETE /api/storage-records/bulk реализован и требует permission 'delete_records'. Функциональность массового удаления работает корректно."
+      - working: true
+        agent: "testing"
+        comment: "Повторное тестирование подтвердило, что массовое удаление работает корректно. Успешно удалены записи, оставив только 3 записи в базе данных, как требовалось."
 
 frontend:
   - task: "PDF download functionality"
