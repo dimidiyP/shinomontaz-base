@@ -730,11 +730,7 @@ async def generate_pdf_receipt(record_id: str, current_user = Depends(verify_tok
                 transliterated = ''.join(cyrillic_to_latin.get(char, char) for char in text)
                 canvas.drawString(x, y, transliterated)
         
-        # Header with record number
-        p.setFillColor((0, 0, 0))
-        draw_cyrillic_text(p, 50, height - 50, f"АКТ ПРИЕМА НА ХРАНЕНИЕ № {record.get('record_number', '')}", "Helvetica-Bold", 18)
-        
-        # Date and location
+        # Format created_at date
         created_at_str = ""
         if record.get("created_at"):
             if isinstance(record["created_at"], datetime):
@@ -742,62 +738,69 @@ async def generate_pdf_receipt(record_id: str, current_user = Depends(verify_tok
             else:
                 created_at_str = str(record["created_at"])
         
-        draw_cyrillic_text(p, 50, height - 80, "г. Нижний Новгород", "Helvetica", 12)
-        draw_cyrillic_text(p, 400, height - 80, f'"{created_at_str}"', "Helvetica", 12)
+        # Format template with record data
+        placeholders = {
+            "full_name": record.get("full_name", ""),
+            "phone": record.get("phone", ""),
+            "parameters": record.get("parameters", ""),
+            "size": record.get("size", ""),
+            "storage_location": record.get("storage_location", ""),
+            "record_number": str(record.get("record_number", "")),
+            "record_id": record.get("record_id", ""),
+            "created_at": created_at_str,
+            "car_brand": record.get("car_brand", ""),
+            "phone_additional": record.get("phone_additional", "") or "не указан"
+        }
         
-        # Main content
-        y_pos = height - 120
+        formatted_template = template_text
+        for key, value in placeholders.items():
+            formatted_template = formatted_template.replace("{" + key + "}", str(value))
         
-        # Introduction
-        intro_text = "Мы, нижеподписавшиеся:"
-        draw_cyrillic_text(p, 50, y_pos, intro_text, "Helvetica", 11)
-        y_pos -= 25
+        # Draw the formatted template
+        y_pos = height - 50
+        lines = formatted_template.split('\n')
         
-        draw_cyrillic_text(p, 50, y_pos, f"1. {record.get('full_name', '')}, именуемый в дальнейшем \"Клиент\",", "Helvetica", 11)
-        y_pos -= 20
-        draw_cyrillic_text(p, 50, y_pos, "2. ООО Ритейл, именуемый в дальнейшем \"Хранитель\",", "Helvetica", 11)
-        y_pos -= 30
-        
-        draw_cyrillic_text(p, 50, y_pos, "составили настоящий акт о нижеследующем:", "Helvetica", 11)
-        y_pos -= 40
-        
-        # Section 1: Subject
-        draw_cyrillic_text(p, 50, y_pos, "1. ПРЕДМЕТ АКТА:", "Helvetica-Bold", 12)
-        y_pos -= 20
-        draw_cyrillic_text(p, 50, y_pos, "Клиент передает, а Хранитель принимает на хранение автомобильные шины", "Helvetica", 11)
-        y_pos -= 15
-        draw_cyrillic_text(p, 50, y_pos, "в количестве и на условиях, указанных ниже.", "Helvetica", 11)
-        y_pos -= 30
-        
-        # Section 2: Item details
-        draw_cyrillic_text(p, 50, y_pos, "2. ИНФОРМАЦИЯ О ТОВАРЕ:", "Helvetica-Bold", 12)
-        y_pos -= 25
-        
-        # Create formatted details table
-        details = [
-            ("Параметры шин:", record.get("parameters", "")),
-            ("Количество:", record.get("size", "")),
-            ("Автомобиль:", record.get("car_brand", "")),
-            ("Телефон клиента:", record.get("phone", "")),
-            ("Доп. телефон:", record.get("phone_additional", "") or "не указан"),
-        ]
-        
-        for label, value in details:
-            draw_cyrillic_text(p, 50, y_pos, label, "Helvetica", 11)
-            draw_cyrillic_text(p, 180, y_pos, str(value), "Helvetica", 11)
-            y_pos -= 18
-        
-        y_pos -= 20
-        
-        # Section 3: Storage conditions
-        draw_cyrillic_text(p, 50, y_pos, "3. УСЛОВИЯ ХРАНЕНИЯ:", "Helvetica-Bold", 12)
-        y_pos -= 20
-        draw_cyrillic_text(p, 50, y_pos, f"Место хранения: {record.get('storage_location', '')}", "Helvetica", 11)
-        y_pos -= 18
-        draw_cyrillic_text(p, 50, y_pos, "Срок хранения: согласно договору", "Helvetica", 11)
-        y_pos -= 18
-        draw_cyrillic_text(p, 50, y_pos, f"Дата приема: {created_at_str}", "Helvetica", 11)
-        y_pos -= 30
+        for line in lines:
+            if not line.strip():
+                y_pos -= 15  # Empty line spacing
+                continue
+                
+            # Check if line is a header (contains "АКТ ПРИЕМА")
+            if "АКТ ПРИЕМА" in line:
+                draw_cyrillic_text(p, 50, y_pos, line.strip(), "Helvetica-Bold", 16)
+                y_pos -= 25
+            # Check if line is a section header (contains numbers like "1.", "2.", etc.)
+            elif line.strip().startswith(("1.", "2.", "3.", "4.")) and ":" in line:
+                draw_cyrillic_text(p, 50, y_pos, line.strip(), "Helvetica-Bold", 12)
+                y_pos -= 20
+            # Check if line contains "ПОДПИСИ СТОРОН"
+            elif "ПОДПИСИ СТОРОН" in line:
+                draw_cyrillic_text(p, 50, y_pos, line.strip(), "Helvetica-Bold", 12)
+                y_pos -= 30
+            # Check if line is a field description (contains colons)
+            elif ":" in line and not line.strip().startswith("http"):
+                draw_cyrillic_text(p, 50, y_pos, line.strip(), "Helvetica", 11)
+                y_pos -= 18
+            # Regular text line
+            else:
+                # Handle long lines by wrapping them
+                if len(line) > 85:
+                    words = line.split(' ')
+                    current_line = ""
+                    for word in words:
+                        if len(current_line + word) < 85:
+                            current_line += word + " "
+                        else:
+                            if current_line:
+                                draw_cyrillic_text(p, 50, y_pos, current_line.strip(), "Helvetica", 11)
+                                y_pos -= 15
+                            current_line = word + " "
+                    if current_line:
+                        draw_cyrillic_text(p, 50, y_pos, current_line.strip(), "Helvetica", 11)
+                        y_pos -= 15
+                else:
+                    draw_cyrillic_text(p, 50, y_pos, line.strip(), "Helvetica", 11)
+                    y_pos -= 15
         
         # Custom template text if provided
         if template_text and template_text != "Я {full_name}, {phone}, оставил на хранение {parameters}, {size}, в Шинном Бюро по адресу {storage_location}. Подпись: _________________":
