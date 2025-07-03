@@ -57,7 +57,6 @@ function App() {
   const [pdfTemplate, setPdfTemplate] = useState('');
   const [draggedIndex, setDraggedIndex] = useState(null);
   const [pdfTemplateLoaded, setPdfTemplateLoaded] = useState(false);
-  const [pdfTemplateLoaded, setPdfTemplateLoaded] = useState(false);
   
   // Record detail state
   const [selectedRecord, setSelectedRecord] = useState(null);
