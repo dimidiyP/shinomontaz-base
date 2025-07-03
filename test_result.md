@@ -136,8 +136,8 @@ backend:
         comment: "Проверена поддержка динамических полей формы. API /api/form-config корректно возвращает конфигурацию полей. Создание записи через /api/storage-records с динамическими полями работает корректно. Новые поля сохраняются в базе данных."
 
   - task: "RetailCRM integration API"
-    implemented: false
-    working: "NA"
+    implemented: true
+    working: true
     file: "server.py"
     stuck_count: 0
     priority: "medium"
@@ -146,6 +146,9 @@ backend:
       - working: "NA"
         agent: "main"
         comment: "Нужно создать интеграцию с RetailCRM для автоматической синхронизации заказов"
+      - working: true
+        agent: "testing"
+        comment: "Проверены новые endpoints: /api/retailcrm/status, /api/retailcrm/sync, /api/retailcrm/orders. Все работают корректно. Планировщик запустился без ошибок. Ручная синхронизация работает."
 
 frontend:
   - task: "PDF download functionality"
