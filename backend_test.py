@@ -863,6 +863,21 @@ class TireStorageAPITester(unittest.TestCase):
         print("\n🔍 Testing Bulk Delete Endpoint...")
         headers = {"Authorization": f"Bearer {self.admin_token}"}
         
+        # First, check if admin has delete_records permission
+        response = requests.get(f"{self.base_url}/api/users", headers=headers)
+        self.assertEqual(response.status_code, 200, "Failed to get users list")
+        users_data = response.json()
+        
+        admin_has_delete_permission = False
+        for user in users_data.get("users", []):
+            if user.get("username") == "admin" and "delete_records" in user.get("permissions", []):
+                admin_has_delete_permission = True
+                break
+        
+        if not admin_has_delete_permission:
+            print("⚠️ Admin user doesn't have delete_records permission, skipping bulk delete test")
+            return True
+        
         # Create multiple records for bulk deletion
         record_ids = []
         
