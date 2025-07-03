@@ -63,6 +63,10 @@ form_config_collection = db.form_config
 pdf_template_collection = db.pdf_template
 retailcrm_orders_collection = db.retailcrm_orders
 
+# Calculator collections
+calculator_settings_collection = db.calculator_settings
+calculator_results_collection = db.calculator_results
+
 # Security scheme
 security = HTTPBearer()
 
