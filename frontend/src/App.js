@@ -1215,6 +1215,22 @@ function App() {
                   <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
+                      {bulkMode && (
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <input
+                            type="checkbox"
+                            checked={selectedRecords.size === filteredRecords.length && filteredRecords.length > 0}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedRecords(new Set(filteredRecords.map(r => r.record_id)));
+                              } else {
+                                setSelectedRecords(new Set());
+                              }
+                            }}
+                            className="rounded border-gray-300"
+                          />
+                        </th>
+                      )}
                       <th 
                         className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                         onClick={() => handleSort('record_number')}
