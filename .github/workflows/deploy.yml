@@ -19,23 +19,83 @@ jobs:
       with:
         ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-    - name: Deploy to server
+    - name: Create backup and deploy
       run: |
         ssh -o StrictHostKeyChecking=no root@83.222.18.104 '
           cd /opt/shinomontaz &&
+          
+          # Create backup directory if not exists
+          mkdir -p /opt/backups &&
+          
+          # Create timestamped backup
+          BACKUP_NAME="backup_$(date +%Y%m%d_%H%M%S)" &&
+          echo "Creating backup: $BACKUP_NAME" &&
+          
+          # Stop services before backup
+          docker-compose down &&
+          
+          # Create full backup
+          tar -czf "/opt/backups/$BACKUP_NAME.tar.gz" \
+            --exclude="node_modules" \
+            --exclude=".git" \
+            --exclude="*.log" \
+            /opt/shinomontaz &&
+          
+          # Keep only last 5 backups
+          cd /opt/backups &&
+          ls -t backup_*.tar.gz | tail -n +6 | xargs -r rm &&
+          
+          # Return to project directory
+          cd /opt/shinomontaz &&
+          
+          # Configure git for clean pull
           git config pull.rebase false &&
           git fetch origin &&
           git reset --hard origin/main &&
-          docker-compose down &&
+          
+          # Build and deploy
           docker-compose build --no-cache &&
           docker-compose up -d &&
-          docker system prune -f
+          docker system prune -f &&
+          
+          echo "Deployment completed. Backup saved as: $BACKUP_NAME.tar.gz"
         '
 
     - name: Health check
       run: |
-        sleep 30
+        sleep 45
+        # Try multiple endpoints to ensure everything is working
         curl -f http://baseshinomontaz.ru/ || curl -f https://baseshinomontaz.ru/api/health || exit 1
+
+    - name: Rollback on failure
+      if: failure()
+      run: |
+        ssh -o StrictHostKeyChecking=no root@83.222.18.104 '
+          cd /opt/shinomontaz &&
+          echo "❌ Deployment failed! Starting rollback..." &&
+          
+          # Stop current containers
+          docker-compose down &&
+          
+          # Get latest backup
+          LATEST_BACKUP=$(ls -t /opt/backups/backup_*.tar.gz | head -1) &&
+          
+          if [ -n "$LATEST_BACKUP" ]; then
+            echo "Rolling back to: $LATEST_BACKUP" &&
+            
+            # Extract backup
+            cd / &&
+            tar -xzf "$LATEST_BACKUP" &&
+            
+            # Restart services
+            cd /opt/shinomontaz &&
+            docker-compose up -d &&
+            
+            echo "✅ Rollback completed"
+          else
+            echo "❌ No backup found for rollback!"
+          fi
+        '
 
     - name: Notify success
       if: success()
@@ -43,4 +103,4 @@ jobs:
 
     - name: Notify failure
       if: failure()
-      run: echo "❌ Deployment failed!"
+      run: echo "❌ Deployment failed and rollback attempted!"
