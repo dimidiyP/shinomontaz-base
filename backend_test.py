@@ -3,6 +3,9 @@ import unittest
 import sys
 import io
 import os
+import json
+import tempfile
+import pandas as pd
 from datetime import datetime
 
 class TireStorageAPITester(unittest.TestCase):
@@ -19,6 +22,7 @@ class TireStorageAPITester(unittest.TestCase):
         self.user_token = None
         self.created_record_id = None
         self.created_record_number = None
+        self.new_status_record_id = None  # For testing status transitions
         self.test_user = f"testuser_{datetime.now().strftime('%H%M%S')}"
 
     def setUp(self):
