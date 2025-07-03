@@ -34,14 +34,14 @@ class CyrillicPDFTester(unittest.TestCase):
         """Test admin login and get token"""
         print("\n🔍 Testing Admin Login...")
         response = requests.post(
-            f"{self.base_url}/api/login",
+            f"{CyrillicPDFTester.base_url}/api/login",
             json={"username": "admin", "password": "K2enlzuzz2"}
         )
         
         self.assertEqual(response.status_code, 200, "Admin login failed")
         data = response.json()
         self.assertIn("access_token", data, "Token not found in response")
-        self.admin_token = data["access_token"]
+        CyrillicPDFTester.admin_token = data["access_token"]
         self.assertEqual(data["user"]["role"], "admin", "User role is not admin")
         print("✅ Admin login successful")
         return True
