@@ -1379,7 +1379,18 @@ function App() {
                 </div>
                 
                 {formConfig.fields.map((field, index) => (
-                  <div key={index} className="border border-gray-200 rounded-lg p-4">
+                  <div 
+                    key={index} 
+                    className="border border-gray-200 rounded-lg p-4 cursor-move transition-colors hover:bg-gray-50"
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, index)}
+                    onDragOver={handleDragOver}
+                    onDrop={(e) => handleDrop(e, index)}
+                  >
+                    <div className="flex items-center mb-3">
+                      <span className="text-gray-400 mr-2 text-lg">≡</span>
+                      <span className="text-sm text-gray-600">Перетащите для изменения порядка</span>
+                    </div>
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Название поля</label>
