@@ -1711,25 +1711,6 @@ function App() {
                 <textarea
                   value={pdfTemplate}
                   onChange={(e) => setPdfTemplate(e.target.value)}
-                  onFocus={async () => {
-                    if (!pdfTemplate) {
-                      try {
-                        const token = localStorage.getItem('token');
-                        const response = await fetch(`${API_BASE_URL}/api/pdf-template`, {
-                          headers: {
-                            'Authorization': `Bearer ${token}`,
-                          },
-                        });
-
-                        if (response.ok) {
-                          const data = await response.json();
-                          setPdfTemplate(data.template);
-                        }
-                      } catch (err) {
-                        setError('Ошибка загрузки шаблона');
-                      }
-                    }
-                  }}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   rows="8"
                   placeholder="Я {full_name}, {phone}, оставил на хранение {parameters}, {size}, в Шинном Бюро по адресу {storage_location}, номер акта {record_number} {created_at}. Подпись: _________________"
