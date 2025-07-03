@@ -4,20 +4,12 @@ FROM node:20-alpine
 # Set working directory
 WORKDIR /app
 
-# Install dependencies with network retry
-RUN apk add --no-cache --virtual .build-deps \
-    python3 \
-    make \
-    g++
-
 # Copy package files
 COPY package*.json yarn.lock ./
 
-# Install dependencies with retry and fallback
+# Install dependencies with network timeout
 RUN yarn config set network-timeout 300000 && \
-    yarn config set registry https://registry.npmjs.org/ && \
-    yarn install --frozen-lockfile --network-timeout 300000 || \
-    (rm -rf node_modules yarn.lock && yarn install)
+    yarn install --frozen-lockfile
 
 # Copy application code
 COPY . .
@@ -27,9 +19,6 @@ RUN yarn build
 
 # Install serve to run the build
 RUN yarn global add serve
-
-# Remove build dependencies
-RUN apk del .build-deps
 
 # Expose port
 EXPOSE 3000
