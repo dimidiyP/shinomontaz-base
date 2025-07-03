@@ -291,6 +291,44 @@ class User(BaseModel):
     role: str
     permissions: List[str]
 
+# Calculator models
+class CalculatorService(BaseModel):
+    id: str
+    name: str
+    description: str
+    time_by_size: dict
+    enabled: bool
+
+class CalculatorOption(BaseModel):
+    id: str
+    name: str
+    description: str
+    time_multiplier: float
+
+class CalculatorSettings(BaseModel):
+    vehicle_type: str
+    name: str
+    hourly_rate: int
+    services: List[CalculatorService]
+    additional_options: List[CalculatorOption]
+
+class CalculatorRequest(BaseModel):
+    vehicle_type: str
+    tire_size: str
+    wheel_count: int
+    selected_services: List[str]
+    additional_options: List[str] = []
+
+class CalculatorResult(BaseModel):
+    vehicle_type: str
+    tire_size: str
+    wheel_count: int
+    selected_services: List[str]
+    additional_options: List[str]
+    total_time: int  # minutes
+    total_cost: int  # rubles
+    breakdown: dict
+
 # RetailCRM Integration Class
 class RetailCRMIntegration:
     def __init__(self):
