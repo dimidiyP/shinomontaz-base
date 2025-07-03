@@ -1,0 +1,109 @@
+name: Quick Deploy (No Tests)
+
+on:
+  workflow_dispatch:
+    inputs:
+      skip_tests:
+        description: 'Skip all tests and deploy directly'
+        required: false
+        default: 'true'
+
+jobs:
+  quick-deploy:
+    name: Quick Deploy to VPS
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup SSH
+      uses: webfactory/ssh-agent@v0.7.0
+      with:
+        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+    - name: Create backup and deploy
+      run: |
+        ssh -o StrictHostKeyChecking=no root@83.222.18.104 '
+          cd /opt/shinomontaz &&
+          
+          # Create backup directory if not exists
+          mkdir -p /opt/backups &&
+          
+          # Create timestamped backup
+          BACKUP_NAME="backup_$(date +%Y%m%d_%H%M%S)" &&
+          echo "Creating backup: $BACKUP_NAME" &&
+          
+          # Stop services before backup
+          docker-compose down &&
+          
+          # Create full backup
+          tar -czf "/opt/backups/$BACKUP_NAME.tar.gz" \
+            --exclude="node_modules" \
+            --exclude=".git" \
+            --exclude="*.log" \
+            --exclude="test-reports" \
+            /opt/shinomontaz &&
+          
+          # Keep only last 5 backups
+          cd /opt/backups &&
+          ls -t backup_*.tar.gz | tail -n +6 | xargs -r rm &&
+          
+          # Return to project directory
+          cd /opt/shinomontaz &&
+          
+          # Configure git for clean pull
+          git config pull.rebase false &&
+          git fetch origin &&
+          git reset --hard origin/main &&
+          
+          # Quick deploy without tests
+          ./deploy-simple.sh &&
+          
+          echo "Quick deployment completed. Backup saved as: $BACKUP_NAME.tar.gz"
+        '
+
+    - name: Simple health check
+      run: |
+        sleep 30
+        curl -f https://baseshinomontaz.ru/api/health || curl -f http://baseshinomontaz.ru/ || exit 1
+        echo "✅ Quick deployment successful!"
+
+    - name: Rollback on failure
+      if: failure()
+      run: |
+        ssh -o StrictHostKeyChecking=no root@83.222.18.104 '
+          cd /opt/shinomontaz &&
+          echo "❌ Quick deployment failed! Starting rollback..." &&
+          
+          # Stop current containers
+          docker-compose down &&
+          
+          # Get latest backup
+          LATEST_BACKUP=$(ls -t /opt/backups/backup_*.tar.gz | head -1) &&
+          
+          if [ -n "$LATEST_BACKUP" ]; then
+            echo "Rolling back to: $LATEST_BACKUP" &&
+            
+            # Extract backup
+            cd / &&
+            tar -xzf "$LATEST_BACKUP" &&
+            
+            # Restart services
+            cd /opt/shinomontaz &&
+            docker-compose up -d &&
+            
+            echo "✅ Rollback completed"
+          else
+            echo "❌ No backup found for rollback!"
+          fi
+        '
+
+    - name: Notify result
+      if: always()
+      run: |
+        if [ "${{ job.status }}" == "success" ]; then
+          echo "✅ Quick deployment successful!"
+        else
+          echo "❌ Quick deployment failed and rollback attempted!"
+        fi
