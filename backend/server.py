@@ -802,53 +802,6 @@ async def generate_pdf_receipt(record_id: str, current_user = Depends(verify_tok
                     draw_cyrillic_text(p, 50, y_pos, line.strip(), "Helvetica", 11)
                     y_pos -= 15
         
-        # Custom template text if provided
-        if template_text and template_text != "Я {full_name}, {phone}, оставил на хранение {parameters}, {size}, в Шинном Бюро по адресу {storage_location}. Подпись: _________________":
-            draw_cyrillic_text(p, 50, y_pos, "4. ДОПОЛНИТЕЛЬНЫЕ УСЛОВИЯ:", "Helvetica-Bold", 12)
-            y_pos -= 20
-            
-            # Format custom template
-            formatted_template = template_text
-            placeholders = {
-                "full_name": record.get("full_name", ""),
-                "phone": record.get("phone", ""),
-                "parameters": record.get("parameters", ""),
-                "size": record.get("size", ""),
-                "storage_location": record.get("storage_location", ""),
-                "record_number": str(record.get("record_number", "")),
-                "record_id": record.get("record_id", ""),
-                "created_at": created_at_str,
-                "car_brand": record.get("car_brand", ""),
-                "phone_additional": record.get("phone_additional", "")
-            }
-            
-            for key, value in placeholders.items():
-                formatted_template = formatted_template.replace("{" + key + "}", str(value))
-            
-            # Split long lines
-            words = formatted_template.split(' ')
-            line = ""
-            for word in words:
-                if len(line + word) < 85:
-                    line += word + " "
-                else:
-                    draw_cyrillic_text(p, 50, y_pos, line.strip(), "Helvetica", 11)
-                    y_pos -= 15
-                    line = word + " "
-            if line:
-                draw_cyrillic_text(p, 50, y_pos, line.strip(), "Helvetica", 11)
-                y_pos -= 30
-        
-        # Signatures section
-        y_pos = max(y_pos, 150)  # Ensure enough space for signatures
-        
-        draw_cyrillic_text(p, 50, y_pos, "ПОДПИСИ СТОРОН:", "Helvetica-Bold", 12)
-        y_pos -= 40
-        
-        draw_cyrillic_text(p, 50, y_pos, "Клиент:", "Helvetica", 11)
-        draw_cyrillic_text(p, 350, y_pos, "Хранитель:", "Helvetica", 11)
-        y_pos -= 30
-        
         # Add signature lines if this is the signatures section
         if "Клиент:" in formatted_template and "Хранитель:" in formatted_template:
             y_pos -= 20
