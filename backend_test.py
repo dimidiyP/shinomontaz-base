@@ -455,6 +455,9 @@ def run_tests():
     suite.addTest(TireStorageAPITester('test_10_update_user_permissions'))
     suite.addTest(TireStorageAPITester('test_11_delete_user'))
     suite.addTest(TireStorageAPITester('test_12_permission_check'))
+    suite.addTest(TireStorageAPITester('test_13_retailcrm_status'))
+    suite.addTest(TireStorageAPITester('test_14_retailcrm_sync'))
+    suite.addTest(TireStorageAPITester('test_15_retailcrm_orders'))
     
     # Run tests
     runner = unittest.TextTestRunner(verbosity=2)
