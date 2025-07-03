@@ -799,10 +799,18 @@ function App() {
                     <input
                       type={field.type === 'tel' ? 'tel' : field.type === 'email' ? 'email' : 'text'}
                       value={storageData[field.name] || ''}
-                      onChange={(e) => setStorageData({...storageData, [field.name]: e.target.value})}
+                      onChange={(e) => {
+                        let value = e.target.value;
+                        // Ограничение для телефона - не более 10 символов
+                        if (field.name === 'phone' || field.name === 'phone_additional') {
+                          value = value.slice(0, 10);
+                        }
+                        setStorageData({...storageData, [field.name]: value});
+                      }}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder={`Введите ${field.label.toLowerCase()}`}
                       required={field.required}
+                      maxLength={field.name === 'phone' || field.name === 'phone_additional' ? 10 : undefined}
                     />
                   )}
                 </div>
