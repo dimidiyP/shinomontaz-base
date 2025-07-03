@@ -498,7 +498,8 @@ async def get_storage_records(current_user = Depends(verify_token)):
         raise HTTPException(status_code=403, detail="Insufficient permissions")
     
     records = []
-    for record in storage_records_collection.find({}):
+    # Sort by record_number in descending order (latest first)
+    for record in storage_records_collection.find({}).sort("record_number", -1):
         record["_id"] = str(record["_id"])
         record["created_at"] = record["created_at"].isoformat()
         
