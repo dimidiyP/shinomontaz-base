@@ -300,7 +300,7 @@ function App() {
       return;
     }
 
-    const newFields = [...editFormConfig.fields];
+    const newFields = [...formConfig.fields];
     const draggedItem = newFields[draggedIndex];
     
     // Remove dragged item
@@ -309,8 +309,8 @@ function App() {
     // Insert at new position
     newFields.splice(dropIndex, 0, draggedItem);
     
-    setEditFormConfig({
-      ...editFormConfig,
+    setFormConfig({
+      ...formConfig,
       fields: newFields
     });
     
