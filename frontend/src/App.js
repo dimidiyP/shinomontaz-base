@@ -235,9 +235,13 @@ function App() {
         const data = await response.json();
         setPdfTemplate(data.template);
         setPdfTemplateLoaded(true);
+        setSuccess('Шаблон загружен из базы данных');
+      } else {
+        setError('Ошибка при загрузке шаблона');
       }
     } catch (err) {
       console.error('Error loading PDF template:', err);
+      setError('Ошибка подключения к серверу при загрузке шаблона');
     }
   };
 
