@@ -510,13 +510,17 @@ async def search_storage_records(
     else:
         raise HTTPException(status_code=400, detail="Invalid search type")
     
-    # Only return records that are in storage
-    search_filter["status"] = "Взята на хранение"
+    # Return records that are in storage or new from retail
+    search_filter["status"] = {"$in": ["Взята на хранение", "Новая"]}
     
     records = []
     for record in storage_records_collection.find(search_filter):
         record["_id"] = str(record["_id"])
         record["created_at"] = record["created_at"].isoformat()
+        
+        # Add retail status text
+        record["retail_status_text"] = retailcrm.get_retailcrm_status_text(record)
+        
         records.append(record)
     
     return {"records": records}
