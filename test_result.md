@@ -128,6 +128,30 @@ backend:
       - working: true
         agent: "testing"
         comment: "Тестирование показало, что PDF теперь содержит 'ООО Ритейл' вместо имени пользователя. PDF генерируется корректно и содержит все необходимые данные."
+      - working: true
+        agent: "testing"
+        comment: "Тестирование GET /api/pdf-template и PUT /api/pdf-template показало, что API для работы с шаблоном PDF работает корректно. Шаблон успешно загружается и сохраняется в базе данных."
+        
+  - task: "PDF template system"
+    implemented: true
+    working: true
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Необходимо проверить систему шаблонов PDF"
+      - working: true
+        agent: "testing"
+        comment: "Тестирование показало, что система шаблонов PDF работает корректно. GET /api/pdf-template возвращает текущий шаблон, PUT /api/pdf-template сохраняет новый шаблон. PDF генерируется с использованием сохраненного шаблона."
+      - working: true
+        agent: "testing"
+        comment: "Проверка поддержки кириллицы в PDF показала, что русский текст отображается корректно. Создана тестовая запись с русскими данными (ФИО: 'Петров Петр Петрович', параметры: 'Летние шины R18'), PDF успешно сгенерирован с этими данными."
+      - working: true
+        agent: "testing"
+        comment: "Тестирование кастомного шаблона 'Акт хранения №{record_number}. Клиент: {full_name}, тел: {phone}. Товар: {parameters}, количество: {size}. Дата: {created_at}' показало, что все переменные корректно подставляются в шаблон."
         
   - task: "Dynamic form fields support in record creation"
     implemented: true
@@ -365,3 +389,5 @@ agent_communication:
     message: "Проведено тестирование новых функций backend: 1) Увеличенное поле телефона (14 символов) - успешно создана запись с телефоном '12345678901234', 2) Обновленная RetailCRM интеграция - fetch_orders теперь фильтрует по status='товар на складе' AND paymentStatus='paid', новые поля tochka_vydachi, type_avto_zakaz, retailcrm_payment_status реализованы, 3) Ограничения на смену статусов - PUT /api/storage-records/{id}/take-storage и PUT /api/storage-records/{id}/release корректно проверяют retailcrm_status, 4) Сортировка записей - GET /api/storage-records возвращает записи отсортированные по record_number DESC, 5) Массовое удаление - новый endpoint DELETE /api/storage-records/bulk работает корректно, 6) PDF с измененным текстом - в PDF теперь 'ООО Ритейл' вместо пользователя. Все тесты прошли успешно."
   - agent: "main"
     message: "Исправлен редактор PDF актов. Проблемы: 1) Дубликаты функций toggleBulkMode и toggleRecordSelection удалены, 2) Добавлена автоматическая загрузка PDF шаблона при открытии страницы редактора через useEffect, 3) Упрощена логика textarea - убран конфликтующий onFocus, 4) Добавлена кнопка 'Загрузить из базы данных' для принудительной перезагрузки шаблона. Теперь редактор должен правильно отображать сохраненный шаблон при открытии страницы."
+  - agent: "testing"
+    message: "Проведено тестирование системы шаблонов PDF. Тестирование показало, что: 1) GET /api/pdf-template корректно возвращает текущий шаблон, 2) PUT /api/pdf-template успешно сохраняет новый шаблон в базе данных, 3) PDF генерируется с использованием сохраненного шаблона, 4) Кириллица в PDF отображается корректно - создана тестовая запись с русскими данными (ФИО: 'Петров Петр Петрович', параметры: 'Летние шины R18'), PDF успешно сгенерирован с этими данными, 5) Кастомный шаблон 'Акт хранения №{record_number}. Клиент: {full_name}, тел: {phone}. Товар: {parameters}, количество: {size}. Дата: {created_at}' работает корректно - все переменные подставляются в шаблон. Все тесты прошли успешно."
