@@ -280,6 +280,31 @@ function App() {
     }
   };
 
+  // Load record details
+  const loadRecordDetail = async (recordId) => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_BASE_URL}/api/storage-records/${recordId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setSelectedRecord(data.record);
+        setShowRecordDetail(true);
+      } else {
+        setError('Ошибка загрузки записи');
+      }
+    } catch (err) {
+      setError('Ошибка подключения к серверу');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Handle taking to storage (for "Новая" status)
   const handleTakeToStorage = async (recordId) => {
     if (window.confirm('Взять запись на хранение?')) {
