@@ -867,9 +867,9 @@ function App() {
                       value={storageData[field.name] || ''}
                       onChange={(e) => {
                         let value = e.target.value;
-                        // Ограничение для телефона - не более 10 символов
+                        // Ограничение для телефона - не более 14 символов
                         if (field.name === 'phone' || field.name === 'phone_additional') {
-                          value = value.slice(0, 10);
+                          value = value.slice(0, 14);
                         }
                         setStorageData({...storageData, [field.name]: value});
                       }}
