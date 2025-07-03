@@ -1,14 +1,14 @@
-# Use Node.js 18
-FROM node:18-alpine
+# Use Node.js 20
+FROM node:20-alpine
 
 # Set working directory
 WORKDIR /app
 
 # Copy package files
-COPY package*.json ./
+COPY package*.json yarn.lock ./
 
 # Install dependencies
-RUN yarn install
+RUN yarn install --frozen-lockfile
 
 # Copy application code
 COPY . .
