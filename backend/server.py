@@ -111,6 +111,164 @@ def init_default_data():
         pdf_template_collection.insert_one({
             "template": "Я {full_name}, {phone}, оставил на хранение {parameters}, {size}, в Шинном Бюро по адресу {storage_location}, номер акта {record_id} {created_at}. Подпись: _________________"
         })
+    
+    # Initialize calculator settings
+    if calculator_settings_collection.count_documents({}) == 0:
+        # Default settings for passenger cars
+        passenger_services = [
+            {
+                "id": "mount_demount",
+                "name": "Монтаж/демонтаж шины",
+                "description": "Снятие старой шины с диска и установка новой",
+                "time_by_size": {
+                    "R13": 15, "R14": 15, "R15": 20, "R16": 20, 
+                    "R17": 25, "R18": 25, "R19": 30, "R20": 35
+                },
+                "enabled": True
+            },
+            {
+                "id": "balancing",
+                "name": "Балансировка колеса",
+                "description": "Устранение дисбаланса колеса для комфортной езды",
+                "time_by_size": {
+                    "R13": 8, "R14": 8, "R15": 10, "R16": 10,
+                    "R17": 12, "R18": 12, "R19": 15, "R20": 18
+                },
+                "enabled": True
+            },
+            {
+                "id": "wheel_remove_install",
+                "name": "Снятие/установка колеса",
+                "description": "Снятие колеса с автомобиля и установка обратно",
+                "time_by_size": {
+                    "R13": 5, "R14": 5, "R15": 5, "R16": 5,
+                    "R17": 7, "R18": 7, "R19": 10, "R20": 12
+                },
+                "enabled": True
+            },
+            {
+                "id": "valve_replacement",
+                "name": "Замена вентиля",
+                "description": "Замена резинового или металлического вентиля",
+                "time_by_size": {
+                    "R13": 3, "R14": 3, "R15": 3, "R16": 3,
+                    "R17": 3, "R18": 3, "R19": 3, "R20": 3
+                },
+                "enabled": True
+            },
+            {
+                "id": "tire_repair",
+                "name": "Ремонт шины",
+                "description": "Заклейка прокола или мелкого повреждения",
+                "time_by_size": {
+                    "R13": 20, "R14": 20, "R15": 25, "R16": 25,
+                    "R17": 30, "R18": 30, "R19": 35, "R20": 40
+                },
+                "enabled": True
+            },
+            {
+                "id": "wheel_straightening",
+                "name": "Правка диска",
+                "description": "Восстановление геометрии деформированного диска",
+                "time_by_size": {
+                    "R13": 30, "R14": 30, "R15": 35, "R16": 35,
+                    "R17": 40, "R18": 40, "R19": 45, "R20": 50
+                },
+                "enabled": True
+            }
+        ]
+        
+        # Default settings for trucks
+        truck_services = [
+            {
+                "id": "mount_demount",
+                "name": "Монтаж/демонтаж шины",
+                "description": "Снятие старой шины с диска и установка новой (грузовые)",
+                "time_by_size": {
+                    "R17.5": 45, "R19.5": 50, "R22.5": 60, "R24.5": 70
+                },
+                "enabled": True
+            },
+            {
+                "id": "balancing",
+                "name": "Балансировка колеса",
+                "description": "Балансировка грузового колеса",
+                "time_by_size": {
+                    "R17.5": 20, "R19.5": 25, "R22.5": 30, "R24.5": 35
+                },
+                "enabled": True
+            },
+            {
+                "id": "wheel_remove_install",
+                "name": "Снятие/установка колеса",
+                "description": "Снятие грузового колеса с автомобиля и установка",
+                "time_by_size": {
+                    "R17.5": 15, "R19.5": 18, "R22.5": 25, "R24.5": 30
+                },
+                "enabled": True
+            },
+            {
+                "id": "valve_replacement",
+                "name": "Замена вентиля",
+                "description": "Замена вентиля на грузовом колесе",
+                "time_by_size": {
+                    "R17.5": 5, "R19.5": 5, "R22.5": 7, "R24.5": 7
+                },
+                "enabled": True
+            },
+            {
+                "id": "tire_repair",
+                "name": "Ремонт шины",
+                "description": "Ремонт грузовой шины",
+                "time_by_size": {
+                    "R17.5": 40, "R19.5": 45, "R22.5": 50, "R24.5": 60
+                },
+                "enabled": True
+            }
+        ]
+        
+        calculator_settings_collection.insert_many([
+            {
+                "vehicle_type": "passenger",
+                "name": "Легковой транспорт",
+                "hourly_rate": 2000,  # рублей за час
+                "services": passenger_services,
+                "additional_options": [
+                    {
+                        "id": "runflat",
+                        "name": "RunFlat шины",
+                        "description": "Дополнительное время на работу с шинами RunFlat",
+                        "time_multiplier": 1.5
+                    },
+                    {
+                        "id": "low_profile",
+                        "name": "Низкопрофильные шины",
+                        "description": "Дополнительное время на работу с низкопрофильными шинами",
+                        "time_multiplier": 1.3
+                    },
+                    {
+                        "id": "damaged_rim",
+                        "name": "Поврежденный диск",
+                        "description": "Дополнительное время при работе с поврежденным диском",
+                        "time_multiplier": 1.4
+                    }
+                ]
+            },
+            {
+                "vehicle_type": "truck",
+                "name": "Грузовой транспорт",
+                "hourly_rate": 3000,  # рублей за час
+                "services": truck_services,
+                "additional_options": [
+                    {
+                        "id": "heavy_duty",
+                        "name": "Особо тяжелые условия",
+                        "description": "Дополнительное время для сложных грузовых работ",
+                        "time_multiplier": 1.3
+                    }
+                ]
+            }
+        ])
 
 # Models
 class LoginRequest(BaseModel):
