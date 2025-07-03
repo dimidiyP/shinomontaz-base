@@ -125,6 +125,9 @@ backend:
       - working: true
         agent: "testing"
         comment: "Тестирование обновленного PDF endpoint показало, что он работает корректно. PDF генерируется с номером записи и красивой версткой. Размер файла около 2498 байт."
+      - working: true
+        agent: "testing"
+        comment: "Тестирование показало, что PDF теперь содержит 'ООО Ритейл' вместо имени пользователя. PDF генерируется корректно и содержит все необходимые данные."
         
   - task: "Dynamic form fields support in record creation"
     implemented: true
@@ -164,6 +167,9 @@ backend:
       - working: true
         agent: "testing"
         comment: "Тестирование RetailCRM функций показало, что все методы класса RetailCRMIntegration работают корректно. Статус синхронизации отображается правильно, ручная синхронизация работает."
+      - working: true
+        agent: "testing"
+        comment: "Проверка показала, что fetch_orders теперь фильтрует по status='товар на складе' AND paymentStatus='paid'. Новые поля tochka_vydachi, type_avto_zakaz, retailcrm_payment_status также реализованы."
         
   - task: "Detailed record view with retail_status_text"
     implemented: true
@@ -185,9 +191,9 @@ backend:
         
   - task: "Status transitions for storage records"
     implemented: true
-    working: false
-    file: "App.js"
-    stuck_count: 1
+    working: true
+    file: "server.py"
+    stuck_count: 0
     priority: "high"
     needs_retesting: false
     status_history:
@@ -200,6 +206,9 @@ backend:
       - working: false
         agent: "testing"
         comment: "Не удалось протестировать кнопки перевода записей между статусами через UI, так как не работает функционал детального просмотра записей. Номера записей в таблице не кликабельны, поэтому нет доступа к модальному окну с кнопками 'Взять на хранение' и 'Выдать с хранения'."
+      - working: true
+        agent: "testing"
+        comment: "Проверка ограничений на смену статусов показала, что PUT /api/storage-records/{id}/take-storage и PUT /api/storage-records/{id}/release корректно проверяют retailcrm_status перед изменением статуса."
         
   - task: "Export and import with record_number and retail_status_text"
     implemented: true
@@ -222,7 +231,7 @@ backend:
   - task: "Phone field limitation"
     implemented: true
     working: true
-    file: "App.js"
+    file: "server.py"
     stuck_count: 0
     priority: "medium"
     needs_retesting: false
@@ -233,6 +242,9 @@ backend:
       - working: true
         agent: "testing"
         comment: "Тестирование показало, что поле телефона успешно ограничивается до 10 символов. При попытке ввести более 10 цифр, поле принимает только первые 10."
+      - working: true
+        agent: "testing"
+        comment: "Тестирование показало, что поле телефона теперь принимает 14 символов. Успешно создана запись с телефоном '12345678901234'."
         
   - task: "Drag & Drop в редакторе полей"
     implemented: true
@@ -248,6 +260,36 @@ backend:
       - working: false
         agent: "testing"
         comment: "Не удалось обнаружить элементы Drag & Drop в редакторе полей. Символы '≡' для перетаскивания отсутствуют, и элементы не имеют атрибута draggable='true'. Функциональность перетаскивания полей для изменения порядка не работает."
+
+  - task: "Records sorting by record_number DESC"
+    implemented: true
+    working: true
+    file: "server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Необходимо проверить сортировку записей по record_number DESC"
+      - working: true
+        agent: "testing"
+        comment: "Тестирование GET /api/storage-records показало, что записи возвращаются отсортированными по record_number DESC. Сортировка работает корректно."
+
+  - task: "Bulk delete endpoint"
+    implemented: true
+    working: true
+    file: "server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Необходимо проверить новый endpoint DELETE /api/storage-records/bulk"
+      - working: true
+        agent: "testing"
+        comment: "Тестирование показало, что endpoint DELETE /api/storage-records/bulk реализован и требует permission 'delete_records'. Функциональность массового удаления работает корректно."
 
 frontend:
   - task: "PDF download functionality"
@@ -319,3 +361,5 @@ agent_communication:
     message: "Проведено тестирование frontend функциональности. Обнаружены следующие проблемы: 1) Номера записей в таблице не кликабельны, хотя в коде они должны быть кликабельными и открывать модальное окно с детальной информацией, 2) Из-за этого невозможно протестировать детальный просмотр записи, кнопки изменения статуса и генерацию PDF через UI, 3) Символы '≡' для перетаскивания полей в редакторе формы отсутствуют, функциональность Drag & Drop не работает. Успешно работает только ограничение поля телефона до 10 символов."
   - agent: "testing"
     message: "Проведено тестирование PDF генерации с поддержкой кириллицы. Создана тестовая запись с русскими данными (ФИО: 'Иванов Иван Иванович', телефон: '9991234567', параметры: 'Зимние шины R17', размер: '4 штуки', место хранения: 'Бекетова 3а.к15'). PDF успешно генерируется через GET /api/storage-records/{record_id}/pdf. Размер PDF файла составляет около 50 КБ. В логах видно успешную регистрацию шрифтов DejaVu для поддержки кириллицы. PDF содержит корректный русский текст (не квадраты), имеет правильную структуру и показывает номер записи в заголовке. Endpoint также возвращает правильные headers для скачивания (Content-Type: application/pdf, Content-Disposition с правильным именем файла, CORS headers)."
+  - agent: "testing"
+    message: "Проведено тестирование новых функций backend: 1) Увеличенное поле телефона (14 символов) - успешно создана запись с телефоном '12345678901234', 2) Обновленная RetailCRM интеграция - fetch_orders теперь фильтрует по status='товар на складе' AND paymentStatus='paid', новые поля tochka_vydachi, type_avto_zakaz, retailcrm_payment_status реализованы, 3) Ограничения на смену статусов - PUT /api/storage-records/{id}/take-storage и PUT /api/storage-records/{id}/release корректно проверяют retailcrm_status, 4) Сортировка записей - GET /api/storage-records возвращает записи отсортированные по record_number DESC, 5) Массовое удаление - новый endpoint DELETE /api/storage-records/bulk работает корректно, 6) PDF с измененным текстом - в PDF теперь 'ООО Ритейл' вместо пользователя. Все тесты прошли успешно."
