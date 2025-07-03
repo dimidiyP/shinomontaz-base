@@ -120,7 +120,7 @@ class PDFTemplateAPITester(unittest.TestCase):
         
         print(f"✅ Record created successfully with ID: {self.test_record_id}")
         print(f"✅ Record number: {self.test_record_number}")
-        return True
+        return self.test_record_id
 
     def test_4_generate_pdf_with_custom_template(self):
         """Test generating PDF with custom template"""
