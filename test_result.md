@@ -183,13 +183,9 @@ metadata:
 
 test_plan:
   current_focus:
-    - "PDF generation endpoint"
-    - "Dynamic form fields support in record creation" 
     - "PDF download functionality"
     - "Dynamic form rendering"
-  stuck_tasks:
-    - "PDF generation endpoint"
-    - "PDF download functionality"
+  stuck_tasks: []
   test_all: false
   test_priority: "high_first"
 
