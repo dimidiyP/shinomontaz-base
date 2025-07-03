@@ -119,6 +119,9 @@ backend:
       - working: true
         agent: "testing"
         comment: "Fixed string formatting issue in PDF generation. PDF now generates correctly."
+      - working: true
+        agent: "testing"
+        comment: "Дополнительное тестирование через прямые API вызовы подтвердило, что PDF генерация работает корректно. PDF файл успешно создается и скачивается размером 1978 байт."
         
   - task: "Dynamic form fields support in record creation"
     implemented: true
