@@ -121,16 +121,19 @@ backend:
         comment: "Исправлена проблема с генерацией PDF. Ошибка была в форматировании строки шаблона. Заменен метод format() на ручную замену плейсхолдеров для избежания ошибок с индексами позиционных аргументов."
         
   - task: "Dynamic form fields support in record creation"
-    implemented: false
-    working: false
+    implemented: true
+    working: true
     file: "server.py" 
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: false
         agent: "user"
         comment: "Новые поля добавленные в конфигурацию формы не отображаются при создании записи"
+      - working: true
+        agent: "testing"
+        comment: "Проверена поддержка динамических полей формы. API /api/form-config корректно возвращает конфигурацию полей. Создание записи через /api/storage-records с динамическими полями работает корректно. Новые поля сохраняются в базе данных."
 
   - task: "RetailCRM integration API"
     implemented: false
