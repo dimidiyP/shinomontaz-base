@@ -155,6 +155,9 @@ backend:
       - working: true
         agent: "testing"
         comment: "RetailCRM integration implemented successfully. All endpoints working, scheduler running every 5 minutes."
+      - working: true
+        agent: "testing"
+        comment: "Дополнительное тестирование через прямые API вызовы подтвердило, что RetailCRM интеграция работает корректно. Планировщик запущен и выполняет синхронизацию каждые 5 минут. Ручная синхронизация также работает без ошибок."
 
 frontend:
   - task: "PDF download functionality"
