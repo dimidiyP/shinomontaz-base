@@ -693,17 +693,27 @@ async def generate_pdf_receipt(record_id: str, current_user = Depends(verify_tok
         
         # Helper function to handle Cyrillic text
         def draw_cyrillic_text(canvas, x, y, text, font="Helvetica", size=12):
-            canvas.setFont(font, size)
-            # Encode text as UTF-8 and then decode for proper display
+            # Use registered font if available, otherwise use default with encoding
+            if font_registered and font.startswith("Helvetica"):
+                # Replace Helvetica with DejaVu for Cyrillic support
+                if "Bold" in font:
+                    font_name = "DejaVuSans-Bold"
+                else:
+                    font_name = "DejaVuSans"
+            else:
+                font_name = font
+            
+            canvas.setFont(font_name, size)
+            
             try:
-                # Convert to bytes and back to handle encoding issues
-                text_encoded = text.encode('utf-8').decode('utf-8')
-                # Use drawString with proper encoding
-                canvas.drawString(x, y, text_encoded)
-            except:
-                # Fallback - replace Cyrillic with transliteration
-                import unicodedata
-                # Simple transliteration mapping for basic Cyrillic
+                # Direct string drawing with proper font
+                canvas.drawString(x, y, text)
+            except Exception as e:
+                # Fallback to transliteration if font fails
+                print(f"Font drawing failed, using transliteration: {e}")
+                canvas.setFont("Helvetica", size)
+                
+                # Simple transliteration mapping for Cyrillic
                 cyrillic_to_latin = {
                     'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'e', 'ё': 'yo',
                     'ж': 'zh', 'з': 'z', 'и': 'i', 'й': 'y', 'к': 'k', 'л': 'l', 'м': 'm',
