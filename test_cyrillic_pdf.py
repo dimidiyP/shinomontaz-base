@@ -9,18 +9,22 @@ import PyPDF2
 from datetime import datetime
 
 class CyrillicPDFTester(unittest.TestCase):
+    # Class variables to share between test methods
+    base_url = None
+    admin_token = None
+    test_record_id = None
+    test_record_number = None
+    
     def __init__(self, *args, **kwargs):
         super(CyrillicPDFTester, self).__init__(*args, **kwargs)
-        # Get the backend URL from frontend/.env
-        with open('/app/frontend/.env', 'r') as f:
-            for line in f:
-                if line.startswith('REACT_APP_BACKEND_URL='):
-                    self.base_url = line.strip().split('=')[1].strip('"\'')
-                    break
-        print(f"Using backend URL: {self.base_url}")
-        self.admin_token = None
-        self.test_record_id = None
-        self.test_record_number = None
+        # Get the backend URL from frontend/.env if not already set
+        if CyrillicPDFTester.base_url is None:
+            with open('/app/frontend/.env', 'r') as f:
+                for line in f:
+                    if line.startswith('REACT_APP_BACKEND_URL='):
+                        CyrillicPDFTester.base_url = line.strip().split('=')[1].strip('"\'')
+                        break
+            print(f"Using backend URL: {CyrillicPDFTester.base_url}")
 
     def setUp(self):
         # Login as admin to get token
