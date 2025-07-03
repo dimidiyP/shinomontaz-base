@@ -276,6 +276,35 @@ function App() {
     }
   };
 
+  // Handle taking to storage (for "Новая" status)
+  const handleTakeToStorage = async (recordId) => {
+    if (window.confirm('Взять запись на хранение?')) {
+      setLoading(true);
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_BASE_URL}/api/storage-records/${recordId}/take-storage`, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          setSuccess('Запись взята на хранение');
+          handleSearch({ preventDefault: () => {} });
+        } else {
+          setError(data.detail || 'Ошибка при взятии на хранение');
+        }
+      } catch (err) {
+        setError('Ошибка подключения к серверу');
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
   const handleRelease = async (recordId) => {
     if (window.confirm('Вы уверены, что хотите выдать клиенту? Забрали ли вы акт?')) {
       setLoading(true);
