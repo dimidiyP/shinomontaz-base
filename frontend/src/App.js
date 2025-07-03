@@ -1753,7 +1753,10 @@ function App() {
                 </button>
                 
                 <button
-                  onClick={() => setPdfTemplate('')}
+                  onClick={() => {
+                    setPdfTemplate('');
+                    setPdfTemplateLoaded(false);
+                  }}
                   className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg font-medium"
                 >
                   Сбросить к умолчанию
