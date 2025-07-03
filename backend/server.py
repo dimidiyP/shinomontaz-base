@@ -515,18 +515,24 @@ async def generate_pdf_receipt(record_id: str, current_user = Depends(verify_tok
             else:
                 created_at_str = str(record["created_at"])
         
-        formatted_text = template_text.format(
-            full_name=record.get("full_name", ""),
-            phone=record.get("phone", ""),
-            parameters=record.get("parameters", ""),
-            size=record.get("size", ""),
-            storage_location=record.get("storage_location", ""),
-            record_number=record.get("record_number", ""),
-            record_id=record.get("record_id", ""),
-            created_at=created_at_str,
-            car_brand=record.get("car_brand", ""),
-            phone_additional=record.get("phone_additional", "")
-        )
+        # Use a dictionary for string formatting to avoid positional argument issues
+        format_dict = {
+            "full_name": record.get("full_name", ""),
+            "phone": record.get("phone", ""),
+            "parameters": record.get("parameters", ""),
+            "size": record.get("size", ""),
+            "storage_location": record.get("storage_location", ""),
+            "record_number": record.get("record_number", ""),
+            "record_id": record.get("record_id", ""),
+            "created_at": created_at_str,
+            "car_brand": record.get("car_brand", ""),
+            "phone_additional": record.get("phone_additional", "")
+        }
+        
+        # Use named placeholders for string formatting
+        formatted_text = template_text
+        for key, value in format_dict.items():
+            formatted_text = formatted_text.replace("{" + key + "}", str(value))
         
         # Split text into lines and draw
         lines = formatted_text.split('\n')
