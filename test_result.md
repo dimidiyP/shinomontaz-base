@@ -107,15 +107,18 @@ user_problem_statement: "Пользователь сообщил о 3 пробл
 backend:
   - task: "PDF generation endpoint"
     implemented: true
-    working: false
+    working: true
     file: "server.py"
-    stuck_count: 1
+    stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: false
         agent: "user"
         comment: "Пользователь получает 'Ошибка подключения к серверу' при попытке печати PDF акта"
+      - working: true
+        agent: "testing"
+        comment: "Исправлена проблема с генерацией PDF. Ошибка была в форматировании строки шаблона. Заменен метод format() на ручную замену плейсхолдеров для избежания ошибок с индексами позиционных аргументов."
         
   - task: "Dynamic form fields support in record creation"
     implemented: false
