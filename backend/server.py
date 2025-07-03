@@ -470,6 +470,23 @@ async def create_storage_record(record_data: dict, current_user = Depends(verify
         "record": storage_data
     }
 
+@app.get("/api/storage-records/{record_id}")
+async def get_storage_record(record_id: str, current_user = Depends(verify_token)):
+    if "view" not in current_user["permissions"]:
+        raise HTTPException(status_code=403, detail="Insufficient permissions")
+    
+    record = storage_records_collection.find_one({"record_id": record_id})
+    if not record:
+        raise HTTPException(status_code=404, detail="Record not found")
+    
+    record["_id"] = str(record["_id"])
+    record["created_at"] = record["created_at"].isoformat()
+    
+    # Add retail status text
+    record["retail_status_text"] = retailcrm.get_retailcrm_status_text(record)
+    
+    return {"record": record}
+
 @app.get("/api/storage-records")
 async def get_storage_records(current_user = Depends(verify_token)):
     if "view" not in current_user["permissions"]:
