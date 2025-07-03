@@ -234,25 +234,6 @@ function App() {
     }
   };
 
-  const loadPdfTemplate = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_BASE_URL}/api/pdf-template`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setPdfTemplate(data.template);
-        setPdfTemplateLoaded(true);
-      }
-    } catch (err) {
-      console.error('Error loading PDF template:', err);
-    }
-  };
-
   const handleStorageSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
