@@ -101,15 +101,15 @@ class CyrillicPDFTester(unittest.TestCase):
 
     def test_2_generate_pdf_with_cyrillic(self):
         """Test generating PDF with Cyrillic characters"""
-        if not self.test_record_id:
+        if not CyrillicPDFTester.test_record_id:
             self.fail("No record ID available for PDF generation test")
             
         print("\n🔍 Testing PDF Generation with Cyrillic...")
-        headers = {"Authorization": f"Bearer {self.admin_token}"}
+        headers = {"Authorization": f"Bearer {CyrillicPDFTester.admin_token}"}
         
         try:
             response = requests.get(
-                f"{self.base_url}/api/storage-records/{self.test_record_id}/pdf", 
+                f"{CyrillicPDFTester.base_url}/api/storage-records/{CyrillicPDFTester.test_record_id}/pdf", 
                 headers=headers,
                 timeout=30  # Increase timeout to avoid connection errors
             )
@@ -120,11 +120,11 @@ class CyrillicPDFTester(unittest.TestCase):
             
             # Check Content-Disposition header for proper filename
             self.assertIn('Content-Disposition', response.headers, "Content-Disposition header missing")
-            self.assertIn(f'act_storage_{self.test_record_number}.pdf', response.headers['Content-Disposition'], 
+            self.assertIn(f'act_storage_{CyrillicPDFTester.test_record_number}.pdf', response.headers['Content-Disposition'], 
                          "Filename in Content-Disposition header is incorrect")
             
             # Save PDF to verify it was generated correctly
-            pdf_path = f"cyrillic_test_receipt_{self.test_record_number}.pdf"
+            pdf_path = f"cyrillic_test_receipt_{CyrillicPDFTester.test_record_number}.pdf"
             with open(pdf_path, "wb") as f:
                 f.write(response.content)
                 
@@ -167,15 +167,15 @@ class CyrillicPDFTester(unittest.TestCase):
 
     def test_3_check_pdf_headers(self):
         """Test PDF endpoint returns correct headers for download"""
-        if not self.test_record_id:
+        if not CyrillicPDFTester.test_record_id:
             self.fail("No record ID available for PDF headers test")
             
         print("\n🔍 Testing PDF Download Headers...")
-        headers = {"Authorization": f"Bearer {self.admin_token}"}
+        headers = {"Authorization": f"Bearer {CyrillicPDFTester.admin_token}"}
         
         try:
             response = requests.get(
-                f"{self.base_url}/api/storage-records/{self.test_record_id}/pdf", 
+                f"{CyrillicPDFTester.base_url}/api/storage-records/{CyrillicPDFTester.test_record_id}/pdf", 
                 headers=headers,
                 timeout=30
             )
@@ -192,7 +192,7 @@ class CyrillicPDFTester(unittest.TestCase):
             self.assertIn('attachment', response.headers['Content-Disposition'], 
                          "Content-Disposition header doesn't specify attachment")
             
-            self.assertIn(f'act_storage_{self.test_record_number}.pdf', response.headers['Content-Disposition'], 
+            self.assertIn(f'act_storage_{CyrillicPDFTester.test_record_number}.pdf', response.headers['Content-Disposition'], 
                          "Filename in Content-Disposition header is incorrect")
             
             # Check CORS headers
