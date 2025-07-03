@@ -1078,8 +1078,15 @@ function App() {
             </div>
 
             {filteredRecords.length > 0 ? (
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
+              <div className="space-y-4">
+                {/* Верхний скролл бар */}
+                <div className="overflow-x-auto">
+                  <div className="h-4 min-w-full"></div>
+                </div>
+                
+                {/* Основная таблица */}
+                <div className="overflow-x-auto border border-gray-200 rounded-lg">
+                  <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
                       <th 
