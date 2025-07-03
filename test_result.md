@@ -137,6 +137,9 @@ backend:
       - working: true
         agent: "testing"
         comment: "Dynamic fields are now properly saved and retrieved from database"
+      - working: true
+        agent: "testing"
+        comment: "Дополнительное тестирование через прямые API вызовы подтвердило, что динамические поля (custom_field_1751496388330, custom_note) корректно сохраняются в БД и возвращаются при запросе."
 
   - task: "RetailCRM integration API"
     implemented: true
