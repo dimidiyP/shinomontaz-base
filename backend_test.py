@@ -184,21 +184,26 @@ class TireStorageAPITester(unittest.TestCase):
         print("\n🔍 Testing PDF Generation...")
         headers = {"Authorization": f"Bearer {self.admin_token}"}
         
-        response = requests.get(
-            f"{self.base_url}/api/storage-records/{self.created_record_id}/pdf", 
-            headers=headers
-        )
-        
-        self.assertEqual(response.status_code, 200, "Failed to generate PDF")
-        self.assertEqual(response.headers['Content-Type'], "application/pdf", "Response is not a PDF")
-        self.assertGreater(len(response.content), 0, "PDF content is empty")
-        
-        # Save PDF to verify it was generated correctly
-        with open(f"test_receipt_{self.created_record_id}.pdf", "wb") as f:
-            f.write(response.content)
+        try:
+            response = requests.get(
+                f"{self.base_url}/api/storage-records/{self.created_record_id}/pdf", 
+                headers=headers,
+                timeout=30  # Increase timeout to avoid connection errors
+            )
             
-        print(f"✅ PDF generated successfully and saved as test_receipt_{self.created_record_id}.pdf")
-        return True
+            self.assertEqual(response.status_code, 200, f"Failed to generate PDF: {response.text if response.status_code != 200 else ''}")
+            self.assertEqual(response.headers['Content-Type'], "application/pdf", "Response is not a PDF")
+            self.assertGreater(len(response.content), 0, "PDF content is empty")
+            
+            # Save PDF to verify it was generated correctly
+            with open(f"test_receipt_{self.created_record_id}.pdf", "wb") as f:
+                f.write(response.content)
+                
+            print(f"✅ PDF generated successfully and saved as test_receipt_{self.created_record_id}.pdf")
+            return True
+        except Exception as e:
+            self.fail(f"PDF generation failed with error: {str(e)}")
+            return False
         
     def test_8_excel_export(self):
         """Test exporting records to Excel"""
