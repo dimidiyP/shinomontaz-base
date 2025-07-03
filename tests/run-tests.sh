@@ -32,7 +32,7 @@ cd /app/tests
 # Установка браузеров если нужно
 if [ ! -d "node_modules" ]; then
   echo "📦 Installing dependencies..."
-  yarn install
+  npm install
 fi
 
 # Установка браузеров Playwright
