@@ -640,19 +640,49 @@ async def generate_pdf_receipt(record_id: str, current_user = Depends(verify_tok
         
         # Register Russian font (DejaVu Sans supports Cyrillic)
         try:
-            # Try to register DejaVu Sans font for Cyrillic support
             from reportlab.pdfbase import pdfmetrics
             from reportlab.pdfbase.ttfonts import TTFont
+            import os
             
-            # Register fonts if not already registered
-            try:
-                pdfmetrics.getFont('DejaVuSans')
-            except:
-                # If DejaVu is not available, we'll use a different approach
-                pass
+            # Try to find and register DejaVu Sans font
+            dejavu_paths = [
+                '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
+                '/usr/share/fonts/TTF/DejaVuSans.ttf',
+                '/System/Library/Fonts/DejaVuSans.ttf',
+                '/usr/share/fonts/dejavu/DejaVuSans.ttf'
+            ]
+            
+            font_registered = False
+            for font_path in dejavu_paths:
+                if os.path.exists(font_path):
+                    try:
+                        pdfmetrics.registerFont(TTFont('DejaVuSans', font_path))
+                        pdfmetrics.registerFont(TTFont('DejaVuSans-Bold', font_path.replace('DejaVuSans.ttf', 'DejaVuSans-Bold.ttf')))
+                        font_registered = True
+                        break
+                    except:
+                        continue
+            
+            # If no DejaVu found, try Liberation fonts
+            if not font_registered:
+                liberation_paths = [
+                    '/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf',
+                    '/usr/share/fonts/TTF/LiberationSans-Regular.ttf'
+                ]
                 
-        except ImportError:
-            pass
+                for font_path in liberation_paths:
+                    if os.path.exists(font_path):
+                        try:
+                            pdfmetrics.registerFont(TTFont('DejaVuSans', font_path))
+                            pdfmetrics.registerFont(TTFont('DejaVuSans-Bold', font_path.replace('Regular', 'Bold')))
+                            font_registered = True
+                            break
+                        except:
+                            continue
+                            
+        except Exception as e:
+            print(f"Font registration failed: {e}")
+            font_registered = False
         
         # Page dimensions
         width, height = A4
