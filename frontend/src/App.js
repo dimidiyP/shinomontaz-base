@@ -1110,7 +1110,12 @@ function App() {
                     {filteredRecords.map((record) => (
                       <tr key={record.record_id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                          {record.record_number}
+                          <button
+                            onClick={() => loadRecordDetail(record.record_id)}
+                            className="text-blue-600 hover:text-blue-900 underline"
+                          >
+                            {record.record_number}
+                          </button>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           {record.full_name}
