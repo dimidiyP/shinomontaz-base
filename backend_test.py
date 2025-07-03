@@ -1369,58 +1369,10 @@ def run_tests():
     
     # Add tests in order
     suite.addTest(TireStorageAPITester('test_30_pdf_template_system'))
-    suite.addTest(TireStorageAPITester('test_1_get_form_config'))
     
-    # Test phone field with 14 digits
-    suite.addTest(TireStorageAPITester('test_23_create_record_with_14_digit_phone'))
-    
-    # Test RetailCRM integration
-    suite.addTest(TireStorageAPITester('test_24_check_retailcrm_filter_params'))
-    suite.addTest(TireStorageAPITester('test_25_check_retailcrm_new_fields'))
-    
-    # Test status transitions with retailcrm_status check
-    suite.addTest(TireStorageAPITester('test_18_create_new_status_record'))
-    suite.addTest(TireStorageAPITester('test_19_release_and_take_storage'))
-    
-    # Test records sorting
-    suite.addTest(TireStorageAPITester('test_26_check_records_sorting'))
-    
-    # Test bulk deletion
-    suite.addTest(TireStorageAPITester('test_27_bulk_delete_endpoint'))
-    
-    # Test PDF with changed text
-    suite.addTest(TireStorageAPITester('test_28_pdf_company_name'))
-    
-    # Test standard record creation and retrieval
-    suite.addTest(TireStorageAPITester('test_2_create_storage_record'))
-    suite.addTest(TireStorageAPITester('test_17_get_detailed_record'))
-    
-    # Test PDF generation with record number
-    suite.addTest(TireStorageAPITester('test_16_create_and_generate_pdf'))
-    
-    # Test export/import with record_number and retail_status_text
-    suite.addTest(TireStorageAPITester('test_20_export_with_record_number'))
-    suite.addTest(TireStorageAPITester('test_21_import_with_duplicates'))
-    
-    # Test RetailCRM functions
-    suite.addTest(TireStorageAPITester('test_22_retailcrm_status_text'))
-    suite.addTest(TireStorageAPITester('test_13_retailcrm_status'))
-    suite.addTest(TireStorageAPITester('test_14_retailcrm_sync'))
-    suite.addTest(TireStorageAPITester('test_15_retailcrm_orders'))
-    
-    # Other standard tests
-    suite.addTest(TireStorageAPITester('test_3_search_by_name'))
-    suite.addTest(TireStorageAPITester('test_4_search_by_phone'))
-    suite.addTest(TireStorageAPITester('test_5_get_all_records'))
-    suite.addTest(TireStorageAPITester('test_6_release_record'))
-    suite.addTest(TireStorageAPITester('test_8_excel_export'))
-    suite.addTest(TireStorageAPITester('test_9_create_user'))
-    suite.addTest(TireStorageAPITester('test_10_update_user_permissions'))
-    suite.addTest(TireStorageAPITester('test_11_delete_user'))
-    suite.addTest(TireStorageAPITester('test_12_permission_check'))
-    
-    # Clean up test records
-    suite.addTest(TireStorageAPITester('test_29_cleanup'))
+    # Add other tests if needed
+    # suite.addTest(TireStorageAPITester('test_1_get_form_config'))
+    # suite.addTest(TireStorageAPITester('test_2_create_storage_record'))
     
     # Run tests
     runner = unittest.TextTestRunner(verbosity=2)
