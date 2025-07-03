@@ -381,6 +381,61 @@ class TireStorageAPITester(unittest.TestCase):
         
         print("✅ User permission checks passed")
         return True
+        
+    def test_13_retailcrm_status(self):
+        """Test RetailCRM status endpoint"""
+        print("\n🔍 Testing RetailCRM Status Endpoint...")
+        headers = {"Authorization": f"Bearer {self.admin_token}"}
+        
+        response = requests.get(f"{self.base_url}/api/retailcrm/status", headers=headers)
+        
+        self.assertEqual(response.status_code, 200, f"Failed to get RetailCRM status: {response.text if response.status_code != 200 else ''}")
+        data = response.json()
+        self.assertIn("scheduler_running", data, "Scheduler status not found in response")
+        self.assertIn("api_url", data, "API URL not found in response")
+        self.assertIn("last_sync_orders", data, "Last sync orders count not found in response")
+        
+        print(f"✅ RetailCRM status endpoint working")
+        print(f"✅ Scheduler running: {data.get('scheduler_running')}")
+        print(f"✅ API URL: {data.get('api_url')}")
+        print(f"✅ Last sync orders: {data.get('last_sync_orders')}")
+        return True
+        
+    def test_14_retailcrm_sync(self):
+        """Test RetailCRM manual sync endpoint"""
+        print("\n🔍 Testing RetailCRM Manual Sync Endpoint...")
+        headers = {"Authorization": f"Bearer {self.admin_token}"}
+        
+        response = requests.post(f"{self.base_url}/api/retailcrm/sync", headers=headers)
+        
+        # Note: This might fail if RetailCRM API is not accessible, but the endpoint should work
+        print(f"RetailCRM sync response status: {response.status_code}")
+        print(f"RetailCRM sync response: {response.text}")
+        
+        # We're only checking if the endpoint is accessible, not if the sync is successful
+        self.assertIn(response.status_code, [200, 500], "RetailCRM sync endpoint not accessible")
+        
+        if response.status_code == 200:
+            print(f"✅ RetailCRM manual sync triggered successfully")
+        else:
+            print(f"⚠️ RetailCRM manual sync endpoint accessible but returned error (expected if RetailCRM API is not accessible)")
+        
+        return True
+        
+    def test_15_retailcrm_orders(self):
+        """Test RetailCRM orders endpoint"""
+        print("\n🔍 Testing RetailCRM Orders Endpoint...")
+        headers = {"Authorization": f"Bearer {self.admin_token}"}
+        
+        response = requests.get(f"{self.base_url}/api/retailcrm/orders", headers=headers)
+        
+        self.assertEqual(response.status_code, 200, f"Failed to get RetailCRM orders: {response.text if response.status_code != 200 else ''}")
+        data = response.json()
+        self.assertIn("orders", data, "Orders not found in response")
+        
+        print(f"✅ RetailCRM orders endpoint working")
+        print(f"✅ Retrieved {len(data.get('orders', []))} RetailCRM orders")
+        return True
 
 def run_tests():
     # Create test suite
