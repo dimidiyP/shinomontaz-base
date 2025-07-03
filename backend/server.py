@@ -330,6 +330,15 @@ class RetailCRMIntegration:
                     return "Расхождение по статусам"
         
         return current_status or "статус не определен"
+    
+    def stop_scheduler(self):
+        """Stop the scheduler"""
+        if self.scheduler.running:
+            self.scheduler.shutdown()
+            logger.info("RetailCRM scheduler stopped")
+
+# Global RetailCRM instance
+retailcrm = RetailCRMIntegration()
 
 # Global RetailCRM instance
 retailcrm = RetailCRMIntegration()
