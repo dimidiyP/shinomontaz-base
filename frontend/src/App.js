@@ -1166,6 +1166,26 @@ function App() {
                     Удалить выбранные ({selectedRecords.size})
                   </button>
                 )}
+                {hasPermission('delete_records') && (
+                  <button
+                    onClick={toggleBulkMode}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium ${
+                      bulkMode 
+                        ? 'bg-red-600 hover:bg-red-700 text-white' 
+                        : 'bg-gray-600 hover:bg-gray-700 text-white'
+                    }`}
+                  >
+                    {bulkMode ? 'Отмена' : 'Массовые действия'}
+                  </button>
+                )}
+                {bulkMode && selectedRecords.size > 0 && (
+                  <button
+                    onClick={handleBulkDelete}
+                    className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium"
+                  >
+                    Удалить выбранные ({selectedRecords.size})
+                  </button>
+                )}
                 <button
                   onClick={() => setCurrentPage('dashboard')}
                   className="text-gray-500 hover:text-gray-700 px-3 py-1 rounded-md text-sm font-medium"
