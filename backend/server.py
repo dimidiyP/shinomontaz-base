@@ -805,6 +805,42 @@ async def generate_pdf_receipt(record_id: str, current_user = Depends(verify_tok
         print(f"PDF generation error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"PDF generation failed: {str(e)}")
 
+
+@app.get("/api/storage-records/export")
+async def export_storage_records(current_user = Depends(verify_token)):
+    if "view" not in current_user["permissions"]:
+        raise HTTPException(status_code=403, detail="Insufficient permissions")
+    
+    # Get all records
+    records = []
+    for record in storage_records_collection.find({}):
+        # Convert ObjectId to string and datetime to ISO format
+        record["_id"] = str(record["_id"])
+        record["created_at"] = record["created_at"].isoformat()
+        
+        # Add retail status text
+        record["retail_status_text"] = retailcrm.get_retailcrm_status_text(record)
+        
+        records.append(record)
+    
+    # Create DataFrame
+    df = pd.DataFrame(records)
+    
+    # Reorder columns to put record_number first
+    if not df.empty:
+        cols = ['record_number'] + [col for col in df.columns if col != 'record_number']
+        df = df[cols]
+    
+    # Create Excel file
+    with tempfile.NamedTemporaryFile(delete=False, suffix='.xlsx') as tmp_file:
+        df.to_excel(tmp_file.name, index=False, engine='openpyxl')
+        tmp_file_path = tmp_file.name
+    
+    return FileResponse(
+        tmp_file_path,
+        media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        filename=f'storage_records_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
+    )
 @app.get("/api/storage-records/export/excel")
 async def export_records_excel(current_user = Depends(verify_token)):
     if "view" not in current_user["permissions"] or current_user["role"] != "admin":
