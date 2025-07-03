@@ -216,10 +216,12 @@ class RetailCRMIntegration:
         return order.get('phone', '') or order.get('phone1', '') or ""
     
     def extract_storage_location(self, order):
-        """Extract storage location from delivery address"""
-        if 'delivery' in order and 'address' in order['delivery']:
-            return order['delivery']['address'].get('text', 'Не указано')
-        return "Не указано"
+        """Extract storage location from tochka_vydachi field"""
+        return order.get('customFields', {}).get('tochka_vydachi', '') or "Не указано"
+    
+    def extract_car_brand(self, order):
+        """Extract car brand from type_avto_zakaz field"""
+        return order.get('customFields', {}).get('type_avto_zakaz', '') or "Не указано"
     
     def extract_parameters(self, order):
         """Extract tire parameters from order items"""
