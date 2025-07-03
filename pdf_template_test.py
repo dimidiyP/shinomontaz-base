@@ -190,8 +190,14 @@ def run_tests():
     # Add tests in order
     suite.addTest(PDFTemplateAPITester('test_1_get_pdf_template'))
     suite.addTest(PDFTemplateAPITester('test_2_update_pdf_template'))
-    suite.addTest(PDFTemplateAPITester('test_3_create_record_with_russian_data'))
-    suite.addTest(PDFTemplateAPITester('test_4_generate_pdf_with_custom_template'))
+    
+    # Run test_3 first and get the record ID
+    test3 = PDFTemplateAPITester('test_3_create_record_with_russian_data')
+    result3 = unittest.TextTestRunner(verbosity=2).run(unittest.TestSuite([test3]))
+    if result3.wasSuccessful():
+        # Now run test_4 with the record ID
+        suite.addTest(PDFTemplateAPITester('test_4_generate_pdf_with_custom_template'))
+    
     suite.addTest(PDFTemplateAPITester('test_5_restore_default_template'))
     
     # Run tests
@@ -202,7 +208,7 @@ def run_tests():
     print(f"\n📊 Tests passed: {result.testsRun - len(result.errors) - len(result.failures)}/{result.testsRun}")
     
     # Return exit code
-    return 0 if result.wasSuccessful() else 1
+    return 0 if result.wasSuccessful() and result3.wasSuccessful() else 1
 
 if __name__ == "__main__":
     sys.exit(run_tests())
