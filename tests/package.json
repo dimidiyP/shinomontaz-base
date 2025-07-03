@@ -1,0 +1,16 @@
+{
+  "name": "tire-storage-frontend-tests",
+  "version": "1.0.0",
+  "description": "Automated frontend tests for tire storage management system",
+  "scripts": {
+    "test": "playwright test",
+    "test:ui": "playwright test --ui",
+    "test:debug": "playwright test --debug",
+    "test:headed": "playwright test --headed",
+    "install-browsers": "playwright install"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.45.0",
+    "playwright": "^1.45.0"
+  }
+}
