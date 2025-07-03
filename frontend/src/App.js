@@ -66,6 +66,18 @@ function App() {
   const [bulkMode, setBulkMode] = useState(false);
   const [selectedRecords, setSelectedRecords] = useState(new Set());
 
+  // Calculator state
+  const [calculatorSettings, setCalculatorSettings] = useState({});
+  const [selectedVehicleType, setSelectedVehicleType] = useState('passenger');
+  const [selectedTireSize, setSelectedTireSize] = useState('R16');
+  const [wheelCount, setWheelCount] = useState(4);
+  const [selectedServices, setSelectedServices] = useState([]);
+  const [selectedOptions, setSelectedOptions] = useState([]);
+  const [calculationResult, setCalculationResult] = useState(null);
+  const [calculatorResult, setCalculatorResult] = useState(null);
+  const [showInfoModal, setShowInfoModal] = useState(false);
+  const [infoModalContent, setInfoModalContent] = useState({});
+
   // Function to sort records
   const sortRecords = (recordsToSort, key, direction) => {
     return [...recordsToSort].sort((a, b) => {
