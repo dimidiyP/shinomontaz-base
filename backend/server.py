@@ -754,7 +754,7 @@ async def generate_pdf_receipt(record_id: str, current_user = Depends(verify_tok
         
         draw_cyrillic_text(p, 50, y_pos, f"1. {record.get('full_name', '')}, именуемый в дальнейшем \"Клиент\",", "Helvetica", 11)
         y_pos -= 20
-        draw_cyrillic_text(p, 50, y_pos, f"2. {record.get('created_by', '')}, именуемый в дальнейшем \"Хранитель\",", "Helvetica", 11)
+        draw_cyrillic_text(p, 50, y_pos, "2. ООО Ритейл, именуемый в дальнейшем \"Хранитель\",", "Helvetica", 11)
         y_pos -= 30
         
         draw_cyrillic_text(p, 50, y_pos, "составили настоящий акт о нижеследующем:", "Helvetica", 11)
