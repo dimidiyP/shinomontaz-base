@@ -1,0 +1,15 @@
+{
+  "features": [
+    {
+      "name": "example-feature",
+      "description": "Пример автогенерируемого теста",
+      "testFile": "example-feature.spec.js",
+      "selectors": [
+        "button.example",
+        "input.demo"
+      ],
+      "createdAt": "2025-07-03T19:52:38.183Z"
+    }
+  ],
+  "lastGenerated": "2025-07-03T19:52:38.183Z"
+}
