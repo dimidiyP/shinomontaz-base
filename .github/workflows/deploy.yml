@@ -35,7 +35,7 @@ jobs:
     - name: Health check
       run: |
         sleep 30
-        curl -f https://baseshinomontaz.ru/api/health || exit 1
+        curl -f http://baseshinomontaz.ru/ || curl -f https://baseshinomontaz.ru/api/health || exit 1
 
     - name: Notify success
       if: success()
