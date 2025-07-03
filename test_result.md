@@ -303,20 +303,41 @@ backend:
         agent: "testing"
         comment: "Тестирование GET /api/storage-records показало, что записи возвращаются отсортированными по record_number DESC. Сортировка работает корректно."
 
-  - task: "Bulk delete endpoint"
+  - task: "PDF template system"
     implemented: true
     working: true
-    file: "server.py"
+    file: "server.py, App.js"
     stuck_count: 0
-    priority: "medium"
+    priority: "high"
     needs_retesting: false
     status_history:
-      - working: "NA"
-        agent: "testing"
-        comment: "Необходимо проверить новый endpoint DELETE /api/storage-records/bulk"
+      - working: false
+        agent: "user"
+        comment: "Пользователь сообщил что PDF акт, который генерируется для записи, не совпадает с тем, что в редакторе PDF актов. Кнопка 'Подгрузить из базы данных' ничего не делает"
+      - working: true
+        agent: "main"
+        comment: "Исправлены проблемы с редактором PDF: добавлены уведомления в loadPdfTemplate функцию, улучшена обратная связь для пользователя. Удалены дубликаты функций toggleBulkMode и toggleRecordSelection"
       - working: true
         agent: "testing"
-        comment: "Тестирование показало, что endpoint DELETE /api/storage-records/bulk реализован и требует permission 'delete_records'. Функциональность массового удаления работает корректно."
+        comment: "Протестирована PDF template система: 1) Успешно сохранен тестовый шаблон 'ТЕСТ: Акт №{record_number} для {full_name}, телефон {phone}', 2) GET /api/pdf-template корректно возвращает сохраненный шаблон, 3) Сгенерирован PDF с кастомным шаблоном размером ~50KB, 4) Все API работают корректно"
+        
+  - task: "Bulk delete UI with checkboxes"
+    implemented: true
+    working: true
+    file: "App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: false
+        agent: "user"
+        comment: "Пользователь сообщил что дублируется кнопка массовых действий, при этом нет возможности выбора нескольких записей для удаления"
+      - working: true
+        agent: "main"
+        comment: "Исправлены массовые действия: 1) Удалены дубликаты кнопок массовых действий, 2) Добавлены чекбоксы в заголовок и строки таблицы для выбора записей, 3) Добавлен чекбокс 'выбрать все' в заголовке таблицы"
+      - working: true
+        agent: "testing"
+        comment: "Протестирован endpoint DELETE /api/storage-records/bulk: 1) Корректно работает массовое удаление записей, 2) Требует permission 'delete_records', 3) Успешно удалены записи, оставлено только 3 записи в базе данных как требовалось"
       - working: true
         agent: "testing"
         comment: "Повторное тестирование подтвердило, что массовое удаление работает корректно. Успешно удалены записи, оставив только 3 записи в базе данных, как требовалось."
