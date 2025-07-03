@@ -130,6 +130,22 @@ class TireStorageAPITester(unittest.TestCase):
         print(f"✅ Storage record created successfully with ID: {self.created_record_id}")
         print(f"✅ Record number: {self.created_record_number}")
         print(f"✅ Custom field saved successfully")
+        
+        # Verify the record exists by getting it directly
+        get_response = requests.get(f"{self.base_url}/api/storage-records", headers=headers)
+        self.assertEqual(get_response.status_code, 200, "Failed to get records")
+        get_data = get_response.json()
+        
+        record_found = False
+        for record in get_data.get("records", []):
+            if record.get("record_id") == self.created_record_id:
+                record_found = True
+                self.assertEqual(record.get("custom_field_1751496388330"), "Test dynamic field value", "Custom field value is incorrect in retrieved record")
+                break
+                
+        self.assertTrue(record_found, f"Created record with ID {self.created_record_id} not found in records list")
+        print(f"✅ Record verified in database")
+        
         return True
 
     def test_3_search_by_name(self):
