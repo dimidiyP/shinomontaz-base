@@ -275,11 +275,61 @@ class RetailCRMIntegration:
         self.scheduler.start()
         logger.info("RetailCRM scheduler started - running every 5 minutes")
     
-    def stop_scheduler(self):
-        """Stop the scheduler"""
-        if self.scheduler.running:
-            self.scheduler.shutdown()
-            logger.info("RetailCRM scheduler stopped")
+    def update_retailcrm_status(self, order_number, new_status):
+        """Update order status in RetailCRM"""
+        try:
+            if not order_number:
+                return False
+                
+            url = f"{self.api_url}/api/v5/orders/{order_number}/edit"
+            headers = {
+                'X-API-KEY': self.api_key,
+                'Content-Type': 'application/json'
+            }
+            
+            data = {
+                'status': new_status,
+                'by': 'number'
+            }
+            
+            response = requests.post(url, headers=headers, json=data, timeout=30)
+            
+            if response.status_code == 200:
+                result = response.json()
+                if result.get('success'):
+                    logger.info(f"Updated RetailCRM order {order_number} status to {new_status}")
+                    return True
+                else:
+                    logger.error(f"Failed to update RetailCRM status: {result.get('errorMsg', 'Unknown error')}")
+                    return False
+            else:
+                logger.error(f"RetailCRM API error: {response.status_code} - {response.text}")
+                return False
+                
+        except Exception as e:
+            logger.error(f"Error updating RetailCRM status: {str(e)}")
+            return False
+    
+    def get_retailcrm_status_text(self, record):
+        """Get retail status text for display"""
+        retailcrm_order_number = record.get("retailcrm_order_number") or record.get("custom_field_1751496388330")
+        
+        if not retailcrm_order_number:
+            return "нет номера ритейла"
+        
+        current_status = record.get("retailcrm_status", "")
+        our_status = record.get("status", "")
+        
+        # Check for status mismatch
+        if current_status and our_status:
+            if our_status == "Выдана с хранения" and current_status != "выдан клиенту":
+                if current_status != "товар на складе С/X":
+                    return "Расхождение по статусам"
+            elif our_status == "Взята на хранение" and current_status != "товар на складе С/X":
+                if current_status != "новый":
+                    return "Расхождение по статусам"
+        
+        return current_status or "статус не определен"
 
 # Global RetailCRM instance
 retailcrm = RetailCRMIntegration()
