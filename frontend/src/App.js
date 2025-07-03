@@ -1593,6 +1593,173 @@ function App() {
             </div>
           </div>
         )}
+
+        {/* Record Detail Modal */}
+        {showRecordDetail && selectedRecord && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-xl shadow-xl p-8 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">
+                  Запись № {selectedRecord.record_number}
+                </h2>
+                <button
+                  onClick={() => {
+                    setShowRecordDetail(false);
+                    setSelectedRecord(null);
+                  }}
+                  className="text-gray-500 hover:text-gray-700 text-2xl font-bold"
+                >
+                  ×
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Main Information */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">Основная информация</h3>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">ФИО</label>
+                    <p className="text-sm text-gray-900">{selectedRecord.full_name}</p>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Телефон</label>
+                    <p className="text-sm text-gray-900">{selectedRecord.phone}</p>
+                  </div>
+                  
+                  {selectedRecord.phone_additional && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Доп. телефон</label>
+                      <p className="text-sm text-gray-900">{selectedRecord.phone_additional}</p>
+                    </div>
+                  )}
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Марка машины</label>
+                    <p className="text-sm text-gray-900">{selectedRecord.car_brand}</p>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Параметры</label>
+                    <p className="text-sm text-gray-900">{selectedRecord.parameters}</p>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Размер/Количество</label>
+                    <p className="text-sm text-gray-900">{selectedRecord.size}</p>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Место хранения</label>
+                    <p className="text-sm text-gray-900">{selectedRecord.storage_location}</p>
+                  </div>
+                </div>
+
+                {/* Status and Retail Information */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">Статус и данные</h3>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Статус</label>
+                    <span className={`inline-block px-2 py-1 text-xs font-semibold rounded-full ${
+                      selectedRecord.status === 'Взята на хранение' ? 'bg-green-100 text-green-800' :
+                      selectedRecord.status === 'Новая' ? 'bg-blue-100 text-blue-800' :
+                      'bg-red-100 text-red-800'
+                    }`}>
+                      {selectedRecord.status}
+                    </span>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Дата создания</label>
+                    <p className="text-sm text-gray-900">
+                      {new Date(selectedRecord.created_at).toLocaleString('ru-RU')}
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Создал</label>
+                    <p className="text-sm text-gray-900">{selectedRecord.created_by}</p>
+                  </div>
+                  
+                  {selectedRecord.retailcrm_order_number && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Номер заказа CRM</label>
+                      <p className="text-sm text-gray-900">{selectedRecord.retailcrm_order_number}</p>
+                    </div>
+                  )}
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Статус в Retail</label>
+                    <p className="text-sm text-gray-900">{selectedRecord.retail_status_text}</p>
+                  </div>
+
+                  {/* Additional custom fields */}
+                  {Object.entries(selectedRecord).map(([key, value]) => {
+                    if (key.startsWith('custom_field_') && value) {
+                      return (
+                        <div key={key}>
+                          <label className="block text-sm font-medium text-gray-700">
+                            {key.replace('custom_field_', 'Поле ')}
+                          </label>
+                          <p className="text-sm text-gray-900">{value}</p>
+                        </div>
+                      );
+                    }
+                    return null;
+                  })}
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-wrap gap-4 mt-8 pt-6 border-t">
+                {selectedRecord.status === 'Новая' && hasPermission('store') && (
+                  <button
+                    onClick={() => {
+                      handleTakeToStorage(selectedRecord.record_id);
+                      setShowRecordDetail(false);
+                    }}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium"
+                  >
+                    Взять на хранение
+                  </button>
+                )}
+                
+                {selectedRecord.status === 'Взята на хранение' && hasPermission('release') && (
+                  <button
+                    onClick={() => {
+                      handleRelease(selectedRecord.record_id);
+                      setShowRecordDetail(false);
+                    }}
+                    className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg font-medium"
+                  >
+                    Выдать с хранения
+                  </button>
+                )}
+                
+                <button
+                  onClick={() => generatePDF(selectedRecord.record_id)}
+                  className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium"
+                >
+                  Распечатать акт
+                </button>
+                
+                {hasPermission('delete_records') && (
+                  <button
+                    onClick={() => {
+                      deleteRecord(selectedRecord.record_id);
+                      setShowRecordDetail(false);
+                    }}
+                    className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-lg font-medium"
+                  >
+                    Удалить запись
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
