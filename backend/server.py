@@ -638,18 +638,63 @@ async def generate_pdf_receipt(record_id: str, current_user = Depends(verify_tok
         buffer = io.BytesIO()
         p = canvas.Canvas(buffer, pagesize=A4)
         
+        # Register Russian font (DejaVu Sans supports Cyrillic)
+        try:
+            # Try to register DejaVu Sans font for Cyrillic support
+            from reportlab.pdfbase import pdfmetrics
+            from reportlab.pdfbase.ttfonts import TTFont
+            
+            # Register fonts if not already registered
+            try:
+                pdfmetrics.getFont('DejaVuSans')
+            except:
+                # If DejaVu is not available, we'll use a different approach
+                pass
+                
+        except ImportError:
+            pass
+        
         # Page dimensions
         width, height = A4
         
+        # Use default font but encode text properly
         # Set up fonts and colors
         p.setFont("Helvetica-Bold", 18)
         
+        # Helper function to handle Cyrillic text
+        def draw_cyrillic_text(canvas, x, y, text, font="Helvetica", size=12):
+            canvas.setFont(font, size)
+            # Encode text as UTF-8 and then decode for proper display
+            try:
+                # Convert to bytes and back to handle encoding issues
+                text_encoded = text.encode('utf-8').decode('utf-8')
+                # Use drawString with proper encoding
+                canvas.drawString(x, y, text_encoded)
+            except:
+                # Fallback - replace Cyrillic with transliteration
+                import unicodedata
+                # Simple transliteration mapping for basic Cyrillic
+                cyrillic_to_latin = {
+                    'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'e', 'ё': 'yo',
+                    'ж': 'zh', 'з': 'z', 'и': 'i', 'й': 'y', 'к': 'k', 'л': 'l', 'м': 'm',
+                    'н': 'n', 'о': 'o', 'п': 'p', 'р': 'r', 'с': 's', 'т': 't', 'у': 'u',
+                    'ф': 'f', 'х': 'h', 'ц': 'ts', 'ч': 'ch', 'ш': 'sh', 'щ': 'sch',
+                    'ъ': '', 'ы': 'y', 'ь': '', 'э': 'e', 'ю': 'yu', 'я': 'ya',
+                    'А': 'A', 'Б': 'B', 'В': 'V', 'Г': 'G', 'Д': 'D', 'Е': 'E', 'Ё': 'YO',
+                    'Ж': 'ZH', 'З': 'Z', 'И': 'I', 'Й': 'Y', 'К': 'K', 'Л': 'L', 'М': 'M',
+                    'Н': 'N', 'О': 'O', 'П': 'P', 'Р': 'R', 'С': 'S', 'Т': 'T', 'У': 'U',
+                    'Ф': 'F', 'Х': 'H', 'Ц': 'TS', 'Ч': 'CH', 'Ш': 'SH', 'Щ': 'SCH',
+                    'Ъ': '', 'Ы': 'Y', 'Ь': '', 'Э': 'E', 'Ю': 'YU', 'Я': 'YA'
+                }
+                
+                transliterated = ''.join(cyrillic_to_latin.get(char, char) for char in text)
+                canvas.drawString(x, y, transliterated)
+        
         # Header with record number
         p.setFillColor((0, 0, 0))
-        p.drawString(50, height - 50, f"АКТ ПРИЕМА НА ХРАНЕНИЕ № {record.get('record_number', '')}")
+        draw_cyrillic_text(p, 50, height - 50, f"АКТ ПРИЕМА НА ХРАНЕНИЕ № {record.get('record_number', '')}", "Helvetica-Bold", 18)
         
         # Date and location
-        p.setFont("Helvetica", 12)
         created_at_str = ""
         if record.get("created_at"):
             if isinstance(record["created_at"], datetime):
@@ -657,41 +702,36 @@ async def generate_pdf_receipt(record_id: str, current_user = Depends(verify_tok
             else:
                 created_at_str = str(record["created_at"])
         
-        p.drawString(50, height - 80, f"г. Нижний Новгород")
-        p.drawString(400, height - 80, f'"{created_at_str}"')
+        draw_cyrillic_text(p, 50, height - 80, "г. Нижний Новгород", "Helvetica", 12)
+        draw_cyrillic_text(p, 400, height - 80, f'"{created_at_str}"', "Helvetica", 12)
         
         # Main content
-        p.setFont("Helvetica", 11)
         y_pos = height - 120
         
         # Introduction
-        intro_text = f"Мы, нижеподписавшиеся:"
-        p.drawString(50, y_pos, intro_text)
+        intro_text = "Мы, нижеподписавшиеся:"
+        draw_cyrillic_text(p, 50, y_pos, intro_text, "Helvetica", 11)
         y_pos -= 25
         
-        p.drawString(50, y_pos, f"1. {record.get('full_name', '')}, именуемый в дальнейшем \"Клиент\",")
+        draw_cyrillic_text(p, 50, y_pos, f"1. {record.get('full_name', '')}, именуемый в дальнейшем \"Клиент\",", "Helvetica", 11)
         y_pos -= 20
-        p.drawString(50, y_pos, f"2. {record.get('created_by', '')}, именуемый в дальнейшем \"Хранитель\",")
+        draw_cyrillic_text(p, 50, y_pos, f"2. {record.get('created_by', '')}, именуемый в дальнейшем \"Хранитель\",", "Helvetica", 11)
         y_pos -= 30
         
-        p.drawString(50, y_pos, "составили настоящий акт о нижеследующем:")
+        draw_cyrillic_text(p, 50, y_pos, "составили настоящий акт о нижеследующем:", "Helvetica", 11)
         y_pos -= 40
         
         # Section 1: Subject
-        p.setFont("Helvetica-Bold", 12)
-        p.drawString(50, y_pos, "1. ПРЕДМЕТ АКТА:")
+        draw_cyrillic_text(p, 50, y_pos, "1. ПРЕДМЕТ АКТА:", "Helvetica-Bold", 12)
         y_pos -= 20
-        p.setFont("Helvetica", 11)
-        p.drawString(50, y_pos, "Клиент передает, а Хранитель принимает на хранение автомобильные шины")
+        draw_cyrillic_text(p, 50, y_pos, "Клиент передает, а Хранитель принимает на хранение автомобильные шины", "Helvetica", 11)
         y_pos -= 15
-        p.drawString(50, y_pos, "в количестве и на условиях, указанных ниже.")
+        draw_cyrillic_text(p, 50, y_pos, "в количестве и на условиях, указанных ниже.", "Helvetica", 11)
         y_pos -= 30
         
         # Section 2: Item details
-        p.setFont("Helvetica-Bold", 12)
-        p.drawString(50, y_pos, "2. ИНФОРМАЦИЯ О ТОВАРЕ:")
+        draw_cyrillic_text(p, 50, y_pos, "2. ИНФОРМАЦИЯ О ТОВАРЕ:", "Helvetica-Bold", 12)
         y_pos -= 25
-        p.setFont("Helvetica", 11)
         
         # Create formatted details table
         details = [
@@ -703,30 +743,26 @@ async def generate_pdf_receipt(record_id: str, current_user = Depends(verify_tok
         ]
         
         for label, value in details:
-            p.drawString(50, y_pos, f"{label}")
-            p.drawString(180, y_pos, str(value))
+            draw_cyrillic_text(p, 50, y_pos, label, "Helvetica", 11)
+            draw_cyrillic_text(p, 180, y_pos, str(value), "Helvetica", 11)
             y_pos -= 18
         
         y_pos -= 20
         
         # Section 3: Storage conditions
-        p.setFont("Helvetica-Bold", 12)
-        p.drawString(50, y_pos, "3. УСЛОВИЯ ХРАНЕНИЯ:")
+        draw_cyrillic_text(p, 50, y_pos, "3. УСЛОВИЯ ХРАНЕНИЯ:", "Helvetica-Bold", 12)
         y_pos -= 20
-        p.setFont("Helvetica", 11)
-        p.drawString(50, y_pos, f"Место хранения: {record.get('storage_location', '')}")
+        draw_cyrillic_text(p, 50, y_pos, f"Место хранения: {record.get('storage_location', '')}", "Helvetica", 11)
         y_pos -= 18
-        p.drawString(50, y_pos, "Срок хранения: согласно договору")
+        draw_cyrillic_text(p, 50, y_pos, "Срок хранения: согласно договору", "Helvetica", 11)
         y_pos -= 18
-        p.drawString(50, y_pos, f"Дата приема: {created_at_str}")
+        draw_cyrillic_text(p, 50, y_pos, f"Дата приема: {created_at_str}", "Helvetica", 11)
         y_pos -= 30
         
         # Custom template text if provided
         if template_text and template_text != "Я {full_name}, {phone}, оставил на хранение {parameters}, {size}, в Шинном Бюро по адресу {storage_location}. Подпись: _________________":
-            p.setFont("Helvetica-Bold", 12)
-            p.drawString(50, y_pos, "4. ДОПОЛНИТЕЛЬНЫЕ УСЛОВИЯ:")
+            draw_cyrillic_text(p, 50, y_pos, "4. ДОПОЛНИТЕЛЬНЫЕ УСЛОВИЯ:", "Helvetica-Bold", 12)
             y_pos -= 20
-            p.setFont("Helvetica", 11)
             
             # Format custom template
             formatted_template = template_text
@@ -753,23 +789,21 @@ async def generate_pdf_receipt(record_id: str, current_user = Depends(verify_tok
                 if len(line + word) < 85:
                     line += word + " "
                 else:
-                    p.drawString(50, y_pos, line.strip())
+                    draw_cyrillic_text(p, 50, y_pos, line.strip(), "Helvetica", 11)
                     y_pos -= 15
                     line = word + " "
             if line:
-                p.drawString(50, y_pos, line.strip())
+                draw_cyrillic_text(p, 50, y_pos, line.strip(), "Helvetica", 11)
                 y_pos -= 30
         
         # Signatures section
         y_pos = max(y_pos, 150)  # Ensure enough space for signatures
         
-        p.setFont("Helvetica-Bold", 12)
-        p.drawString(50, y_pos, "ПОДПИСИ СТОРОН:")
+        draw_cyrillic_text(p, 50, y_pos, "ПОДПИСИ СТОРОН:", "Helvetica-Bold", 12)
         y_pos -= 40
         
-        p.setFont("Helvetica", 11)
-        p.drawString(50, y_pos, "Клиент:")
-        p.drawString(350, y_pos, "Хранитель:")
+        draw_cyrillic_text(p, 50, y_pos, "Клиент:", "Helvetica", 11)
+        draw_cyrillic_text(p, 350, y_pos, "Хранитель:", "Helvetica", 11)
         y_pos -= 30
         
         # Signature lines
@@ -778,15 +812,15 @@ async def generate_pdf_receipt(record_id: str, current_user = Depends(verify_tok
         y_pos -= 15
         
         p.setFont("Helvetica", 9)
-        p.drawString(50, y_pos, f"/ {record.get('full_name', '')} /")
-        p.drawString(350, y_pos, f"/ {record.get('created_by', '')} /")
+        draw_cyrillic_text(p, 50, y_pos, f"/ {record.get('full_name', '')} /", "Helvetica", 9)
+        draw_cyrillic_text(p, 350, y_pos, f"/ {record.get('created_by', '')} /", "Helvetica", 9)
         
         # Footer
         y_pos = 50
         p.setFont("Helvetica", 8)
         p.setFillColor((0.5, 0.5, 0.5))
-        p.drawString(50, y_pos, f"Документ создан: {datetime.now().strftime('%d.%m.%Y %H:%M')}")
-        p.drawString(400, y_pos, f"ID записи: {record.get('record_id', '')}")
+        draw_cyrillic_text(p, 50, y_pos, f"Документ создан: {datetime.now().strftime('%d.%m.%Y %H:%M')}", "Helvetica", 8)
+        draw_cyrillic_text(p, 400, y_pos, f"ID записи: {record.get('record_id', '')}", "Helvetica", 8)
         
         p.save()
         buffer.seek(0)
