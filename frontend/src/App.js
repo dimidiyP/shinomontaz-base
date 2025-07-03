@@ -152,6 +152,13 @@ function App() {
     setFilteredRecords(applyFilters(records, filters));
   }, [records, filters]);
 
+  useEffect(() => {
+    // Load PDF template when user navigates to PDF config page
+    if (currentPage === 'pdf-config' && !pdfTemplateLoaded) {
+      loadPdfTemplate();
+    }
+  }, [currentPage, pdfTemplateLoaded]);
+
   const applyFilters = (recordsToFilter, activeFilters) => {
     return recordsToFilter.filter(record => {
       return Object.keys(activeFilters).every(key => {
