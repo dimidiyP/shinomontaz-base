@@ -909,13 +909,28 @@ function App() {
                       <div className="text-sm text-gray-600">
                         <p>Создано: {new Date(record.created_at).toLocaleString('ru-RU')}</p>
                         <p>Создал: {record.created_by}</p>
+                        {record.retail_status_text && (
+                          <p>Статус в Retail: <span className="font-medium">{record.retail_status_text}</span></p>
+                        )}
                       </div>
-                      <button
-                        onClick={() => handleRelease(record.record_id)}
-                        className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium"
-                      >
-                        Выдать с хранения
-                      </button>
+                      <div className="flex space-x-2">
+                        {record.status === 'Новая' && (
+                          <button
+                            onClick={() => handleTakeToStorage(record.record_id)}
+                            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium"
+                          >
+                            Взять на хранение
+                          </button>
+                        )}
+                        {record.status === 'Взята на хранение' && (
+                          <button
+                            onClick={() => handleRelease(record.record_id)}
+                            className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium"
+                          >
+                            Выдать с хранения
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}
