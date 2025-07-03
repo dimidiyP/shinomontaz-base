@@ -82,7 +82,18 @@ jobs:
           # Install test dependencies if not present
           if [ ! -d "node_modules" ]; then
             echo "📦 Installing test dependencies..."
-            yarn install
+            # Use npm instead of yarn since yarn might not be installed
+            npm install || {
+              echo "⚠️ npm not found, installing Node.js and npm..."
+              curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+              apt-get install -y nodejs
+              npm install
+            }
+          fi &&
+          
+          # Update run-tests.sh to use npm instead of yarn
+          if grep -q "yarn install" run-tests.sh; then
+            sed -i "s/yarn install/npm install/g" run-tests.sh
           fi &&
           
           # Run quick smoke tests
