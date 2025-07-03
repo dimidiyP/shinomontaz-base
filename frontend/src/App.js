@@ -55,6 +55,10 @@ function App() {
   // Form configuration state
   const [editFormConfig, setEditFormConfig] = useState(null);
   const [pdfTemplate, setPdfTemplate] = useState('');
+  
+  // Record detail state
+  const [selectedRecord, setSelectedRecord] = useState(null);
+  const [showRecordDetail, setShowRecordDetail] = useState(false);
 
   // Function to sort records
   const sortRecords = (recordsToSort, key, direction) => {
