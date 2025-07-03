@@ -285,6 +285,59 @@ function App() {
     }
   };
 
+  // Bulk operations functions
+  const toggleBulkMode = () => {
+    setBulkMode(!bulkMode);
+    setSelectedRecords(new Set());
+  };
+
+  const toggleRecordSelection = (recordId) => {
+    const newSelected = new Set(selectedRecords);
+    if (newSelected.has(recordId)) {
+      newSelected.delete(recordId);
+    } else {
+      newSelected.add(recordId);
+    }
+    setSelectedRecords(newSelected);
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedRecords.size === 0) {
+      setError('Выберите записи для удаления');
+      return;
+    }
+
+    if (window.confirm(`Вы уверены, что хотите удалить ${selectedRecords.size} записей? Это действие необратимо.`)) {
+      setLoading(true);
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_BASE_URL}/api/storage-records/bulk`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify([...selectedRecords]),
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          setSuccess(`Удалено ${data.deleted_count} записей`);
+          setBulkMode(false);
+          setSelectedRecords(new Set());
+          loadRecords(); // Refresh the list
+        } else {
+          setError(data.detail || 'Ошибка при удалении записей');
+        }
+      } catch (err) {
+        setError('Ошибка подключения к серверу');
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
   // Drag and drop functions for form fields
   const handleDragStart = (e, index) => {
     setDraggedIndex(index);
