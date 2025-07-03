@@ -453,6 +453,57 @@ class TireStorageAPITester(unittest.TestCase):
         print(f"✅ Retrieved {len(data.get('orders', []))} RetailCRM orders")
         return True
 
+    def test_16_create_and_generate_pdf(self):
+        """Test creating a record and generating PDF for it"""
+        print("\n🔍 Testing Create Record and Generate PDF...")
+        headers = {"Authorization": f"Bearer {self.admin_token}"}
+        
+        # Create a record
+        storage_data = {
+            "full_name": "PDF Test User",
+            "phone": "+7-999-555-44-33",
+            "phone_additional": "+7-999-111-22-33",
+            "car_brand": "BMW X5",
+            "parameters": "255/55/R19",
+            "size": "4 шт",
+            "storage_location": "Бекетова 3а.к15",
+            "custom_field_test": "PDF Test Value"
+        }
+        
+        create_response = requests.post(
+            f"{self.base_url}/api/storage-records", 
+            json=storage_data, 
+            headers=headers
+        )
+        
+        self.assertEqual(create_response.status_code, 200, f"Failed to create storage record: {create_response.text if create_response.status_code != 200 else ''}")
+        create_data = create_response.json()
+        record_id = create_data["record"]["record_id"]
+        
+        print(f"✅ Created test record with ID: {record_id}")
+        
+        # Generate PDF for the record
+        try:
+            pdf_response = requests.get(
+                f"{self.base_url}/api/storage-records/{record_id}/pdf", 
+                headers=headers,
+                timeout=30
+            )
+            
+            self.assertEqual(pdf_response.status_code, 200, f"Failed to generate PDF: {pdf_response.text if pdf_response.status_code != 200 else ''}")
+            self.assertEqual(pdf_response.headers['Content-Type'], "application/pdf", "Response is not a PDF")
+            self.assertGreater(len(pdf_response.content), 0, "PDF content is empty")
+            
+            # Save PDF to verify it was generated correctly
+            with open(f"test_receipt_combined_{record_id}.pdf", "wb") as f:
+                f.write(pdf_response.content)
+                
+            print(f"✅ PDF generated successfully and saved as test_receipt_combined_{record_id}.pdf")
+            return True
+        except Exception as e:
+            self.fail(f"PDF generation failed with error: {str(e)}")
+            return False
+
 def run_tests():
     # Create test suite
     suite = unittest.TestSuite()
@@ -461,7 +512,7 @@ def run_tests():
     # Add tests in order
     suite.addTest(TireStorageAPITester('test_1_get_form_config'))
     suite.addTest(TireStorageAPITester('test_2_create_storage_record'))
-    suite.addTest(TireStorageAPITester('test_7_generate_pdf'))  # Move PDF test right after record creation
+    suite.addTest(TireStorageAPITester('test_16_create_and_generate_pdf'))  # Combined test for PDF generation
     suite.addTest(TireStorageAPITester('test_3_search_by_name'))
     suite.addTest(TireStorageAPITester('test_4_search_by_phone'))
     suite.addTest(TireStorageAPITester('test_5_get_all_records'))
