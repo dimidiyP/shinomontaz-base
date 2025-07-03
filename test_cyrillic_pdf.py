@@ -49,7 +49,7 @@ class CyrillicPDFTester(unittest.TestCase):
     def test_1_create_record_with_cyrillic(self):
         """Test creating a storage record with Cyrillic data"""
         print("\n🔍 Testing Create Storage Record with Cyrillic data...")
-        headers = {"Authorization": f"Bearer {self.admin_token}"}
+        headers = {"Authorization": f"Bearer {CyrillicPDFTester.admin_token}"}
         
         # Create record with Russian data as requested
         storage_data = {
@@ -64,7 +64,7 @@ class CyrillicPDFTester(unittest.TestCase):
         }
         
         response = requests.post(
-            f"{self.base_url}/api/storage-records", 
+            f"{CyrillicPDFTester.base_url}/api/storage-records", 
             json=storage_data, 
             headers=headers
         )
@@ -76,15 +76,15 @@ class CyrillicPDFTester(unittest.TestCase):
         self.assertIn("record_number", data["record"], "Record number not found")
         
         # Save record ID for later tests
-        self.test_record_id = data["record"]["record_id"]
-        self.test_record_number = data["record"]["record_number"]
+        CyrillicPDFTester.test_record_id = data["record"]["record_id"]
+        CyrillicPDFTester.test_record_number = data["record"]["record_number"]
         
-        print(f"✅ Storage record created successfully with ID: {self.test_record_id}")
-        print(f"✅ Record number: {self.test_record_number}")
+        print(f"✅ Storage record created successfully with ID: {CyrillicPDFTester.test_record_id}")
+        print(f"✅ Record number: {CyrillicPDFTester.test_record_number}")
         
         # Verify the record exists by getting it directly
         get_response = requests.get(
-            f"{self.base_url}/api/storage-records/{self.test_record_id}", 
+            f"{CyrillicPDFTester.base_url}/api/storage-records/{CyrillicPDFTester.test_record_id}", 
             headers=headers
         )
         
