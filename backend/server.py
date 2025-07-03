@@ -1426,6 +1426,158 @@ async def get_retailcrm_status(current_user = Depends(verify_token)):
         "last_sync_orders": storage_records_collection.count_documents({"source": "retailcrm"})
     }
 
+# Calculator API endpoints
+@app.get("/api/calculator/settings/{vehicle_type}")
+async def get_calculator_settings(vehicle_type: str):
+    """Get calculator settings for specific vehicle type (public endpoint)"""
+    settings = calculator_settings_collection.find_one({"vehicle_type": vehicle_type})
+    if not settings:
+        raise HTTPException(status_code=404, detail="Vehicle type not found")
+    
+    # Remove MongoDB _id field
+    settings.pop('_id', None)
+    return settings
+
+@app.post("/api/calculator/calculate")
+async def calculate_service_cost(request: CalculatorRequest):
+    """Calculate total cost and time for selected services (public endpoint)"""
+    # Get settings for vehicle type
+    settings = calculator_settings_collection.find_one({"vehicle_type": request.vehicle_type})
+    if not settings:
+        raise HTTPException(status_code=400, detail="Invalid vehicle type")
+    
+    total_time = 0
+    total_cost = 0
+    breakdown = {
+        "services": [],
+        "additional_options": [],
+        "base_time": 0,
+        "multiplier": 1.0,
+        "final_time": 0,
+        "hourly_rate": settings["hourly_rate"]
+    }
+    
+    # Calculate time for selected services
+    for service_id in request.selected_services:
+        service = next((s for s in settings["services"] if s["id"] == service_id and s["enabled"]), None)
+        if service:
+            time_for_size = service["time_by_size"].get(request.tire_size, 0)
+            service_time = time_for_size * request.wheel_count
+            total_time += service_time
+            
+            breakdown["services"].append({
+                "id": service_id,
+                "name": service["name"],
+                "time_per_wheel": time_for_size,
+                "total_time": service_time
+            })
+    
+    breakdown["base_time"] = total_time
+    
+    # Apply additional options multipliers
+    multiplier = 1.0
+    for option_id in request.additional_options:
+        option = next((o for o in settings["additional_options"] if o["id"] == option_id), None)
+        if option:
+            multiplier *= option["time_multiplier"]
+            breakdown["additional_options"].append({
+                "id": option_id,
+                "name": option["name"],
+                "multiplier": option["time_multiplier"]
+            })
+    
+    breakdown["multiplier"] = multiplier
+    final_time = int(total_time * multiplier)
+    breakdown["final_time"] = final_time
+    
+    # Calculate cost (time in minutes to hours)
+    total_cost = int((final_time / 60) * settings["hourly_rate"])
+    
+    result = {
+        "vehicle_type": request.vehicle_type,
+        "tire_size": request.tire_size,
+        "wheel_count": request.wheel_count,
+        "selected_services": request.selected_services,
+        "additional_options": request.additional_options,
+        "total_time": final_time,
+        "total_cost": total_cost,
+        "breakdown": breakdown
+    }
+    
+    return result
+
+@app.post("/api/calculator/save-result")
+async def save_calculator_result(request: CalculatorRequest):
+    """Save calculation result and return unique link (public endpoint)"""
+    # Calculate the result first
+    calculation = await calculate_service_cost(request)
+    
+    # Generate unique ID
+    unique_id = str(uuid.uuid4())
+    
+    # Save to database
+    result_doc = {
+        "unique_id": unique_id,
+        "calculation": calculation,
+        "created_at": datetime.now()
+    }
+    
+    calculator_results_collection.insert_one(result_doc)
+    
+    return {"unique_id": unique_id, "calculation": calculation}
+
+@app.get("/api/calculator/result/{unique_id}")
+async def get_calculator_result(unique_id: str):
+    """Get saved calculation result by unique ID (public endpoint)"""
+    result = calculator_results_collection.find_one({"unique_id": unique_id})
+    if not result:
+        raise HTTPException(status_code=404, detail="Result not found")
+    
+    # Remove MongoDB _id field
+    result.pop('_id', None)
+    return result
+
+# Admin endpoints for calculator management
+@app.get("/api/admin/calculator/settings")
+async def get_all_calculator_settings(current_user = Depends(verify_token)):
+    """Get all calculator settings (admin only)"""
+    if "calculator_management" not in current_user["permissions"]:
+        raise HTTPException(status_code=403, detail="Insufficient permissions")
+    
+    settings = list(calculator_settings_collection.find())
+    for setting in settings:
+        setting.pop('_id', None)
+    
+    return settings
+
+@app.put("/api/admin/calculator/settings/{vehicle_type}")
+async def update_calculator_settings(vehicle_type: str, settings_data: dict, current_user = Depends(verify_token)):
+    """Update calculator settings for vehicle type (admin only)"""
+    if "calculator_management" not in current_user["permissions"]:
+        raise HTTPException(status_code=403, detail="Insufficient permissions")
+    
+    result = calculator_settings_collection.update_one(
+        {"vehicle_type": vehicle_type},
+        {"$set": settings_data}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Vehicle type not found")
+    
+    return {"message": "Settings updated successfully"}
+
+@app.get("/api/admin/calculator/results")
+async def get_calculator_results(current_user = Depends(verify_token)):
+    """Get all saved calculator results (admin only)"""
+    if "calculator_management" not in current_user["permissions"]:
+        raise HTTPException(status_code=403, detail="Insufficient permissions")
+    
+    results = list(calculator_results_collection.find().sort("created_at", -1).limit(100))
+    for result in results:
+        result.pop('_id', None)
+    
+    return results
+
 # Initialize default data on startup
 init_default_data()
 
