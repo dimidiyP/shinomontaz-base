@@ -1295,6 +1295,16 @@ function App() {
                   <tbody className="bg-white divide-y divide-gray-200">
                     {filteredRecords.map((record) => (
                       <tr key={record.record_id} className="hover:bg-gray-50">
+                        {bulkMode && (
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <input
+                              type="checkbox"
+                              checked={selectedRecords.has(record.record_id)}
+                              onChange={() => toggleRecordSelection(record.record_id)}
+                              className="rounded border-gray-300"
+                            />
+                          </td>
+                        )}
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                           <button
                             onClick={() => loadRecordDetail(record.record_id)}
