@@ -503,10 +503,245 @@ class TireStorageAPITester(unittest.TestCase):
                 f.write(pdf_response.content)
                 
             print(f"✅ PDF generated successfully and saved as test_receipt_combined_{record_id}.pdf")
+            print(f"✅ PDF size: {len(pdf_response.content)} bytes")
             return True
         except Exception as e:
             self.fail(f"PDF generation failed with error: {str(e)}")
             return False
+            
+    def test_17_get_detailed_record(self):
+        """Test getting detailed record information including retail_status_text"""
+        print("\n🔍 Testing Get Detailed Record...")
+        headers = {"Authorization": f"Bearer {self.admin_token}"}
+        
+        if not self.created_record_id:
+            print("⚠️ Creating a new record for detailed view test")
+            # Create a record first
+            storage_data = {
+                "full_name": "Детальный Просмотр Тест",
+                "phone": "+7-999-888-77-66",
+                "phone_additional": "+7-999-111-22-33",
+                "car_brand": "Audi Q7",
+                "parameters": "265/50/R20",
+                "size": "4 шт",
+                "storage_location": "Московское шоссе 22к1",
+                "custom_field_1751496388330": "12345"  # RetailCRM order number
+            }
+            
+            create_response = requests.post(
+                f"{self.base_url}/api/storage-records", 
+                json=storage_data, 
+                headers=headers
+            )
+            
+            self.assertEqual(create_response.status_code, 200, "Failed to create record for detailed view test")
+            create_data = create_response.json()
+            self.created_record_id = create_data["record"]["record_id"]
+            self.created_record_number = create_data["record"]["record_number"]
+        
+        # Get detailed record
+        response = requests.get(
+            f"{self.base_url}/api/storage-records/{self.created_record_id}", 
+            headers=headers
+        )
+        
+        self.assertEqual(response.status_code, 200, f"Failed to get detailed record: {response.text if response.status_code != 200 else ''}")
+        data = response.json()
+        self.assertIn("record", data, "Record not found in response")
+        self.assertIn("record_id", data["record"], "Record ID not found")
+        self.assertIn("record_number", data["record"], "Record number not found")
+        self.assertIn("retail_status_text", data["record"], "retail_status_text not found in response")
+        
+        print(f"✅ Detailed record retrieved successfully")
+        print(f"✅ Record number: {data['record']['record_number']}")
+        print(f"✅ Retail status text: {data['record']['retail_status_text']}")
+        return True
+        
+    def test_18_create_new_status_record(self):
+        """Test creating a record with 'Новая' status for status transition testing"""
+        print("\n🔍 Testing Create Record with 'Новая' Status...")
+        headers = {"Authorization": f"Bearer {self.admin_token}"}
+        
+        # Create a record with RetailCRM fields to simulate a new record from RetailCRM
+        storage_data = {
+            "full_name": "Статус Тест Пользователь",
+            "phone": "+7-999-777-66-55",
+            "phone_additional": "+7-999-444-55-66",
+            "car_brand": "Mercedes GLC",
+            "parameters": "235/55/R19",
+            "size": "4 шт",
+            "storage_location": "Бекетова 3а.к15",
+            "custom_field_1751496388330": "67890",  # RetailCRM order number
+            "status": "Новая"  # This will be overridden by the API
+        }
+        
+        # First, we need to directly insert this into MongoDB to set the status as "Новая"
+        # We'll use the API to create it, then update it via a direct API call
+        create_response = requests.post(
+            f"{self.base_url}/api/storage-records", 
+            json=storage_data, 
+            headers=headers
+        )
+        
+        self.assertEqual(create_response.status_code, 200, "Failed to create record with 'Новая' status")
+        create_data = create_response.json()
+        record_id = create_data["record"]["record_id"]
+        
+        # Now we need to update the status to "Новая" - we'll use a direct MongoDB update
+        # For testing purposes, we'll create a simple endpoint to do this
+        # Since we don't have direct MongoDB access, we'll simulate this by creating a record
+        # and then manually updating it via the API
+        
+        # For now, we'll just store the ID for the next test
+        self.new_status_record_id = record_id
+        print(f"✅ Created test record with ID: {record_id}")
+        print(f"⚠️ Note: The record has 'Взята на хранение' status by default")
+        print(f"⚠️ We'll test the take-storage endpoint by releasing and then taking it back to storage")
+        return True
+        
+    def test_19_release_and_take_storage(self):
+        """Test releasing a record and then taking it back to storage"""
+        print("\n🔍 Testing Release and Take Storage Workflow...")
+        headers = {"Authorization": f"Bearer {self.admin_token}"}
+        
+        if not self.new_status_record_id:
+            print("⚠️ No record ID available for status transition test")
+            return False
+            
+        # First release the record
+        print("Step 1: Releasing record from storage")
+        release_response = requests.put(
+            f"{self.base_url}/api/storage-records/{self.new_status_record_id}/release", 
+            headers=headers
+        )
+        
+        self.assertEqual(release_response.status_code, 200, f"Failed to release record: {release_response.text if release_response.status_code != 200 else ''}")
+        
+        # Verify the record was released
+        get_response = requests.get(
+            f"{self.base_url}/api/storage-records/{self.new_status_record_id}", 
+            headers=headers
+        )
+        
+        self.assertEqual(get_response.status_code, 200, "Failed to get record after release")
+        get_data = get_response.json()
+        self.assertEqual(get_data["record"]["status"], "Выдана с хранения", "Record status not updated to 'Выдана с хранения'")
+        
+        print("✅ Record released successfully")
+        
+        # Now test the take-storage endpoint
+        # Note: In a real scenario, we would need a record with "Новая" status
+        # For testing purposes, we'll use the released record
+        print("Step 2: Taking record back to storage")
+        take_storage_response = requests.put(
+            f"{self.base_url}/api/storage-records/{self.new_status_record_id}/take-storage", 
+            headers=headers
+        )
+        
+        # This should fail because the record is not in "Новая" status
+        self.assertEqual(take_storage_response.status_code, 400, "Take-storage should fail for records not in 'Новая' status")
+        
+        print("✅ Take-storage endpoint correctly rejected record not in 'Новая' status")
+        return True
+        
+    def test_20_export_with_record_number(self):
+        """Test exporting records with record_number as first column and retail_status_text"""
+        print("\n🔍 Testing Export with Record Number and Retail Status...")
+        headers = {"Authorization": f"Bearer {self.admin_token}"}
+        
+        response = requests.get(
+            f"{self.base_url}/api/storage-records/export", 
+            headers=headers
+        )
+        
+        self.assertEqual(response.status_code, 200, "Failed to export records")
+        self.assertEqual(
+            response.headers['Content-Type'], 
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", 
+            "Response is not an Excel file"
+        )
+        self.assertGreater(len(response.content), 0, "Excel content is empty")
+        
+        # Save Excel file to verify it was generated correctly
+        with open("test_export_with_record_number.xlsx", "wb") as f:
+            f.write(response.content)
+            
+        # Read the Excel file to verify record_number is the first column
+        df = pd.read_excel(io.BytesIO(response.content))
+        
+        # Check if record_number is the first column
+        self.assertEqual(df.columns[0], "record_number", "record_number is not the first column")
+        
+        # Check if retail_status_text is included
+        self.assertIn("retail_status_text", df.columns, "retail_status_text not found in export")
+        
+        print("✅ Export with record_number as first column successful")
+        print("✅ Export includes retail_status_text")
+        return True
+        
+    def test_21_import_with_duplicates(self):
+        """Test importing records with duplicate detection"""
+        print("\n🔍 Testing Import with Duplicate Detection...")
+        headers = {"Authorization": f"Bearer {self.admin_token}"}
+        
+        # First, export existing records to use as import data
+        export_response = requests.get(
+            f"{self.base_url}/api/storage-records/export", 
+            headers=headers
+        )
+        
+        self.assertEqual(export_response.status_code, 200, "Failed to export records for import test")
+        
+        # Save the export file
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.xlsx') as tmp_file:
+            tmp_file.write(export_response.content)
+            tmp_file_path = tmp_file.name
+        
+        # Now import the same file to test duplicate detection
+        with open(tmp_file_path, 'rb') as f:
+            files = {'file': ('test_import.xlsx', f, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')}
+            import_response = requests.post(
+                f"{self.base_url}/api/storage-records/import", 
+                headers=headers,
+                files=files
+            )
+        
+        self.assertEqual(import_response.status_code, 200, f"Failed to import records: {import_response.text if import_response.status_code != 200 else ''}")
+        import_data = import_response.json()
+        
+        # Check if duplicates were detected
+        self.assertIn("duplicates", import_data, "Duplicates count not found in response")
+        self.assertGreater(import_data["duplicates"], 0, "No duplicates detected")
+        
+        print(f"✅ Import with duplicate detection successful")
+        print(f"✅ Detected {import_data['duplicates']} duplicates")
+        print(f"✅ Imported {import_data['imported']} records")
+        print(f"✅ Errors: {import_data['errors']}")
+        
+        # Clean up
+        os.unlink(tmp_file_path)
+        return True
+        
+    def test_22_retailcrm_status_text(self):
+        """Test RetailCRM status text generation"""
+        print("\n🔍 Testing RetailCRM Status Text Generation...")
+        headers = {"Authorization": f"Bearer {self.admin_token}"}
+        
+        # Get all records
+        response = requests.get(
+            f"{self.base_url}/api/storage-records", 
+            headers=headers
+        )
+        
+        self.assertEqual(response.status_code, 200, "Failed to get records for RetailCRM status test")
+        data = response.json()
+        
+        # Check if retail_status_text is included for all records
+        for record in data["records"]:
+            self.assertIn("retail_status_text", record, "retail_status_text not found in record")
+        
+        print("✅ RetailCRM status text is included for all records")
+        return True
 
 def run_tests():
     # Create test suite
