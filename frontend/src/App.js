@@ -281,6 +281,42 @@ function App() {
     }
   };
 
+  // Drag and drop functions for form fields
+  const handleDragStart = (e, index) => {
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = (e, dropIndex) => {
+    e.preventDefault();
+    
+    if (draggedIndex === null || draggedIndex === dropIndex) {
+      setDraggedIndex(null);
+      return;
+    }
+
+    const newFields = [...editFormConfig.fields];
+    const draggedItem = newFields[draggedIndex];
+    
+    // Remove dragged item
+    newFields.splice(draggedIndex, 1);
+    
+    // Insert at new position
+    newFields.splice(dropIndex, 0, draggedItem);
+    
+    setEditFormConfig({
+      ...editFormConfig,
+      fields: newFields
+    });
+    
+    setDraggedIndex(null);
+  };
+
   // Load record details
   const loadRecordDetail = async (recordId) => {
     setLoading(true);
