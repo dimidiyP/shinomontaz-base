@@ -184,12 +184,15 @@ class RetailCRMIntegration:
                     "parameters": self.extract_parameters(order),
                     "size": self.extract_size(order),
                     "storage_location": self.extract_storage_location(order),
-                    "status": "Взята на хранение",
+                    "status": "Новая",  # Новый статус для записей из RetailCRM
                     "created_at": datetime.now(),
                     "created_by": "retailcrm_sync",
                     "custom_field_1751496388330": order.get('number', ''),
                     "retailcrm_order_id": order.get('id'),
                     "retailcrm_external_id": order.get('externalId'),
+                    "retailcrm_order_number": order.get('number', ''),  # Номер заказа CRM
+                    "retailcrm_status": order.get('status', ''),  # Текущий статус в RetailCRM
+                    "retailcrm_sync_count": 0,  # Счетчик синхронизаций
                     "source": "retailcrm"
                 }
                 
