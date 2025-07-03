@@ -517,25 +517,80 @@ async def search_storage_records(
     
     return {"records": records}
 
+@app.put("/api/storage-records/{record_id}/take-storage")
+async def take_to_storage(record_id: str, current_user = Depends(verify_token)):
+    """Take record from 'Новая' to 'Взята на хранение' status"""
+    if "store" not in current_user["permissions"]:
+        raise HTTPException(status_code=403, detail="Insufficient permissions")
+    
+    # Find and update the record
+    record = storage_records_collection.find_one({"record_id": record_id})
+    if not record:
+        raise HTTPException(status_code=404, detail="Record not found")
+    
+    if record.get("status") != "Новая":
+        raise HTTPException(status_code=400, detail="Can only take records with 'Новая' status")
+    
+    # Update to storage status
+    update_data = {
+        "status": "Взята на хранение",
+        "taken_to_storage_at": datetime.now(),
+        "taken_to_storage_by": current_user["username"]
+    }
+    
+    # Update RetailCRM status if order number exists
+    retailcrm_order_number = record.get("retailcrm_order_number") or record.get("custom_field_1751496388330")
+    if retailcrm_order_number and record.get("retailcrm_sync_count", 0) < 3:
+        success = retailcrm.update_retailcrm_status(retailcrm_order_number, "товар на складе С/X")
+        if success:
+            update_data["retailcrm_status"] = "товар на складе С/X"
+            update_data["retailcrm_sync_count"] = record.get("retailcrm_sync_count", 0) + 1
+    
+    result = storage_records_collection.update_one(
+        {"record_id": record_id},
+        {"$set": update_data}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Record not found")
+    
+    return {"message": "Запись взята на хранение"}
+
 @app.put("/api/storage-records/{record_id}/release")
 async def release_storage_record(record_id: str, current_user = Depends(verify_token)):
     if "release" not in current_user["permissions"]:
         raise HTTPException(status_code=403, detail="Insufficient permissions")
     
-    # Find and update the record
+    # Find the record first
+    record = storage_records_collection.find_one({"record_id": record_id})
+    if not record:
+        raise HTTPException(status_code=404, detail="Record not found")
+    
+    if record.get("status") != "Взята на хранение":
+        raise HTTPException(status_code=400, detail="Record is not in storage")
+    
+    # Update to released status
+    update_data = {
+        "status": "Выдана с хранения",
+        "released_at": datetime.now(),
+        "released_by": current_user["username"]
+    }
+    
+    # Update RetailCRM status if order number exists
+    retailcrm_order_number = record.get("retailcrm_order_number") or record.get("custom_field_1751496388330")
+    if retailcrm_order_number and record.get("retailcrm_sync_count", 0) < 3:
+        success = retailcrm.update_retailcrm_status(retailcrm_order_number, "выдан клиенту")
+        if success:
+            update_data["retailcrm_status"] = "выдан клиенту"
+            update_data["retailcrm_sync_count"] = record.get("retailcrm_sync_count", 0) + 1
+    
     result = storage_records_collection.update_one(
         {"record_id": record_id, "status": "Взята на хранение"},
-        {
-            "$set": {
-                "status": "Выдана с хранения",
-                "released_at": datetime.now(),
-                "released_by": current_user["username"]
-            }
-        }
+        {"$set": update_data}
     )
     
     if result.matched_count == 0:
-        raise HTTPException(status_code=404, detail="Record not found or already released")
+        raise HTTPException(status_code=404, detail="Record not found or not in storage")
     
     return {"message": "Запись успешно выдана с хранения"}
 
