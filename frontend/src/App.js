@@ -55,6 +55,7 @@ function App() {
   // Form configuration state
   const [editFormConfig, setEditFormConfig] = useState(null);
   const [pdfTemplate, setPdfTemplate] = useState('');
+  const [draggedIndex, setDraggedIndex] = useState(null);
   
   // Record detail state
   const [selectedRecord, setSelectedRecord] = useState(null);
