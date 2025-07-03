@@ -23,7 +23,9 @@ jobs:
       run: |
         ssh -o StrictHostKeyChecking=no root@83.222.18.104 '
           cd /opt/shinomontaz &&
-          git pull origin main &&
+          git config pull.rebase false &&
+          git fetch origin &&
+          git reset --hard origin/main &&
           docker-compose down &&
           docker-compose build --no-cache &&
           docker-compose up -d &&
