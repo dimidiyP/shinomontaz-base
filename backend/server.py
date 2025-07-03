@@ -879,6 +879,80 @@ async def export_records_excel(current_user = Depends(verify_token)):
         filename=f"storage_records_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
     )
 
+@app.post("/api/storage-records/import")
+async def import_storage_records(file: UploadFile = File(...), current_user = Depends(verify_token)):
+    if "view" not in current_user["permissions"] or current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Insufficient permissions")
+    
+    if not file.filename.endswith(('.xlsx', '.xls')):
+        raise HTTPException(status_code=400, detail="Only Excel files are supported")
+    
+    try:
+        # Read Excel file
+        contents = await file.read()
+        df = pd.read_excel(io.BytesIO(contents))
+        
+        imported_count = 0
+        duplicate_count = 0
+        error_count = 0
+        errors = []
+        
+        # Get existing record numbers to check for duplicates
+        existing_record_numbers = set(
+            record.get("record_number") for record in storage_records_collection.find({}, {"record_number": 1})
+            if record.get("record_number") is not None
+        )
+        
+        for index, row in df.iterrows():
+            try:
+                # Check for duplicate record number
+                if pd.notna(row.get('record_number')) and int(row['record_number']) in existing_record_numbers:
+                    duplicate_count += 1
+                    continue
+                
+                # Create record
+                record_data = {
+                    "record_id": str(uuid.uuid4()),
+                    "record_number": generate_next_record_id(),  # Generate new number regardless of import data
+                    "status": "Взята на хранение",
+                    "created_at": datetime.now(),
+                    "created_by": f"{current_user['username']}_import"
+                }
+                
+                # Map DataFrame columns to record fields
+                for col in df.columns:
+                    if col not in ['_id', 'record_id', 'record_number', 'created_at', 'created_by']:
+                        value = row[col]
+                        if pd.notna(value):
+                            record_data[col] = str(value)
+                
+                # Validate required fields
+                required_fields = ['full_name', 'phone']
+                for field in required_fields:
+                    if not record_data.get(field):
+                        raise ValueError(f"Missing required field: {field}")
+                
+                storage_records_collection.insert_one(record_data)
+                imported_count += 1
+                
+            except Exception as e:
+                error_count += 1
+                errors.append(f"Row {index + 1}: {str(e)}")
+                if len(errors) > 10:  # Limit error messages
+                    errors.append(f"... и еще {len(df) - index - 1} ошибок")
+                    break
+        
+        return {
+            "message": "Импорт завершен",
+            "imported": imported_count,
+            "duplicates": duplicate_count,
+            "errors": error_count,
+            "error_details": errors[:10]  # Show first 10 errors
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Import failed: {str(e)}")
+
 @app.post("/api/storage-records/import/excel")
 async def import_records_excel(file: UploadFile = File(...), current_user = Depends(verify_token)):
     if "store" not in current_user["permissions"]:
