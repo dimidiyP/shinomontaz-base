@@ -1,40 +1,23 @@
 <analysis>
-The AI engineer successfully built a comprehensive tire storage management system from scratch, adhering to the user's detailed requirements. The initial phase focused on building the core application with authentication, record creation, search, and viewing. The second major phase involved setting up Docker-based deployment with Nginx and GitHub Actions for CI/CD. This phase was heavily characterized by extensive debugging of deployment issues, including Node.js version incompatibilities, Docker container build failures due to volume mounts, and persistent SSH authentication problems with GitHub Actions. The AI iteratively troubleshooted these, demonstrating strong diagnostic capabilities by analyzing logs and network configurations. Finally, the engineer began implementing a new batch of feature requests, covering UI/UX adjustments, PDF generation fixes, record deletion, and advanced sorting, which was still ongoing at the end of the trajectory.
+The previous AI engineer successfully initiated a tire storage management system from scratch, covering core functionality and deploying it using Docker and Nginx. A significant portion of the trajectory involved extensive debugging of deployment issues, particularly persistent Nginx configuration problems related to HTTPS and Docker volume mounts, and Git/CI/CD failures. The engineer demonstrated strong diagnostic capabilities by analyzing logs and network states, iteratively resolving complex infrastructure challenges. Concurrently, the AI engineer began implementing a large set of new features including UI/UX refinements, dynamic form fields, PDF generation, and a substantial RetailCRM integration for automatic order synchronization and status management. Towards the end, a comprehensive automated testing framework using Playwright was introduced, and further enhancements to existing features (e.g., bulk deletion, phone field validation, table display) were in progress, alongside continued debugging of frontend display issues and the PDF act editor.
 </analysis>
 
 <product_requirements>
-The user requested a full-stack web application similar to  for tire storage management, initially suggesting Node.js but confirming FastAPI + React + MongoDB.
-**Core Functionality:**
-1.  **Authentication:** Login with roles (Admin: /, User: /).
-2.  **Admin Dashboard:** Buttons for Записать на хранение (Store), Выдать с хранения (Issue), Просмотр сделанных записей (View Records), Изменение формы записи (Edit Record Form), Изменение формы Акта (Edit Act Form), Управление пользователями (Manage Users).
-3.  **Record Storage:** Form fields (FIO, phone, extra phone, car brand, parameters, size, storage location - select list). Auto-assign unique number, timestamp, Взята на хранение status, and user's name. Generate printable PDF act with customizable template.
-4.  **Record Issuance:** Search by unique number, FIO, or phone (case-insensitive, exact match). Display multiple matching records with Взята на хранение status. Clickable records show full info with Выдать с хранения button, changing status to Выдана с хранения after confirmation. Back button functionality.
-5.  **View Records:** Table of all records (all statuses) with column filtering. Export to Excel. Import from Excel (same format, new unique numbers assigned).
-6.  **Edit Record Form:** Dynamically modify columns/names for record form. Unique number, timestamp, status, and user name fields are non-editable/non-deletable. New fields are empty for old records. Deletion requires confirmation due to data loss.
-7.  **Edit Act Form:** Edit PDF act template, adding text or auto-generated parameters.
-8.  **User Management:** View all users, assign access rights (checkboxes) for each of the 6 main functions. Admin user has full, unchangeable rights and can create new users.
-
-**Post-initial Build Requirements (from Chat 174):**
-1.  Remove test login/password data from the first page.
-2.  Fix no server connection error during PDF act printing.
-3.  Display only one editing window for Изменение формы Акта.
-4.  Add record deletion in Просмотр записей with configurable user permissions.
-5.  Implement sorting (ascending for numbers/dates, Russian then English alphabet for text) in Просмотр записей.
-6.  Allow adding new attributes, not just editing existing ones, in Настройка атрибутов записи.
-7.  Display only one editing window in Настройки атрибутов.
-8.  Change browser title to Хранение Шин.
-9.  Change Made with Emergent badge to Made in ШБШ.
+The application is a full-stack web system (FastAPI + React + MongoDB) for tire storage management, mirroring .
+**Core Features:** User authentication (Admin/User roles), Admin dashboard with functions: Store, Issue, View Records, Edit Record Form, Edit Act Form, Manage Users. Record storage includes auto-assigned unique number, timestamp, status, user name, and printable PDF act with customizable template. Record issuance involves searching records, displaying matches, status updates. View Records shows a filterable table, with Excel import/export. Dynamic record and act form editing, managing user permissions for all main functions.
+**Post-Initial Requirements & Current Enhancements:** Remove test login data. Fix PDF act printing server connection. Single editing window for form settings. Add record deletion with permissions. Implement advanced sorting in record view. Allow adding *new* attributes, not just editing. Change browser title to Хранение Шин and badge to Made in ШБШ.
+**Latest Requirements:** Mass record deletion with user permissions. Clean up test records after testing. Configurable visible fields in record view. RetailCRM integration: sync orders with , specific field mappings (FIO->full_name, phone->phone, tochka_vydachi->storage_location, type_avto_zakaz->car_brand, order number->custom_field), create records ONLY if RetailCRM status is товар на складе (later товар на выдачу) AND paymentStatus=paid. Status sync to RetailCRM on local store/issue, with restrictions (max 3 auto actions, no change if RetailCRM is already final status). Add non-editable статус в Retail field, visible only in record list/detail. Расхождение по статусам if RetailCRM status changes but local doesn't match. Increase phone field to 14 characters. Sort record list by number descending. PDF Act: ООО Ритейл as Хранитель. Detail view for records, with Take to Storage and Print Act buttons. Drag&drop reordering for form fields. Improved table scrolling (top/bottom scrollbars). Export records with order numbers. Import: skip duplicates by number, report count.
 </product_requirements>
 
 <key_technical_concepts>
-- **Full-stack Architecture:** FastAPI (Python) backend, React frontend, MongoDB database.
-- **Authentication:** JWT (JSON Web Tokens) for user authentication and role-based access control.
-- **Containerization:** Docker and Docker Compose for application packaging and orchestration.
-- **Web Server:** Nginx as a reverse proxy for frontend and backend services.
-- **CI/CD:** GitHub Actions for automated deployment (continuous integration/delivery).
-- **PDF Generation:** Python libraries for generating PDF documents with dynamic data.
-- **Excel Handling:** Python libraries for importing and exporting data to Excel format.
-- **Deployment:** SSH for secure remote server access and script execution.
+-   **Full-stack Development:** FastAPI (Python) backend, React frontend, MongoDB database.
+-   **Containerization & Orchestration:** Docker and Docker Compose.
+-   **Web Server:** Nginx as a reverse proxy, configured for HTTP and HTTPS (SSL).
+-   **CI/CD:** GitHub Actions for automated deployment, with added backup/rollback.
+-   **Authentication:** JWT for user roles and access control.
+-   **PDF Generation:**  with Cyrillic font support.
+-   **External API Integration:** RetailCRM API (via , ).
+-   **Automated Testing:** Playwright for frontend E2E tests, integrated with CI/CD.
 </key_technical_concepts>
 
 <code_architecture>
@@ -42,69 +25,152 @@ The application follows a standard full-stack architecture, with a React single-
 
 
 
--   ****: This is the main FastAPI application file.
-    -   **Summary**: Handles all backend logic, including user authentication (JWT), database interactions (MongoDB), CRUD operations for records, user management, PDF generation, and Excel import/export.
-    -   **Changes**: Initially created with full authentication, record creation, search, and view endpoints. Later updated to include API endpoints for PDF generation, Excel import/export, dynamic form management, and user permissions. Recent edits added the delete record endpoint and potentially new user management functions.
--   ****: The main React component for the user interface.
-    -   **Summary**: Defines the application's routes, components (login, record form, tables, admin panels), and handles API calls to the backend. It dynamically renders different views based on user roles and navigation.
-    -   **Changes**: Initially created for the MVP (login, record creation, basic view/search). Progressively updated to include all required functionalities: PDF generation, Excel import/export, user management, dynamic form editing, and comprehensive record display with filtering. Recent changes aimed at removing redundant UI elements, adding delete functionality, and implementing sorting.
--   ****: Contains the main CSS styles for the React application.
-    -   **Summary**: Provides the styling for the frontend, likely using Tailwind CSS directives based on the initial project setup.
-    -   **Changes**: Updated during initial bulk file write to set up the base functional UI. No specific functional changes indicated for this file later on, likely minor style adjustments.
--   ****: The main HTML file served by the frontend.
-    -   **Summary**: The entry point for the React application. It loads the compiled JavaScript and CSS.
-    -   **Changes**: Modified to change the browser title to Хранение Шин and update the Made with Emergent badge to Made in ШБШ.
--   ****: Defines the multi-container Docker application.
-    -   **Summary**: Orchestrates the , , , and  services, defining their build contexts, ports, dependencies, and environment variables.
-    -   **Changes**: Initially created during deployment setup. Critical change involved removing the bind volume mount () for the  service to ensure the  folder generated inside the container during image build was not overwritten by the local host directory. Also contains environment variable definitions for inter-service communication.
--   ****: Dockerfile for the FastAPI backend.
-    -   **Summary**: Defines how the backend Docker image is built, including Python dependencies.
-    -   **Changes**: Created to package the FastAPI application.
--   ****: Dockerfile for the React frontend.
-    -   **Summary**: Defines how the React Docker image is built, including Node.js version, yarn install v1.22.22
+-   ****: Main FastAPI application.
+    -   **Summary**: Handles user authentication, MongoDB CRUD, PDF generation, Excel operations, dynamic form/act management, user permissions, and RetailCRM integration.
+    -   **Changes**: Updated for PDF generation (layout, order number, Cyrillic support, ООО Ритейл as keeper), dynamic field support in records, RetailCRM integration (scheduler, endpoints, order filtering by , status & payment status conditions, field mapping for , ), status change restrictions for RetailCRM-synced orders, phone number field length increase to 14, default sorting for records (descending by number), bulk deletion endpoint, and includes the  type hint.
+-   ****: Main React component.
+    -   **Summary**: Defines routes, components (login, record form, tables, admin panels), handles API calls, and dynamically renders views based on roles.
+    -   **Changes**: UI refinements (removed test data, consolidated editing windows), new status support for records (Новая), phone number input validation (14 chars), detailed record view (clickable numbers, display all info, Take to Storage and Print Act buttons), drag&drop reordering for form fields, table UI improvements (double scrollbars), partially implemented bulk deletion UI (with noted code duplication).
+-   ****: Main HTML file.
+    -   **Summary**: Entry point for React app, contains meta information and branding.
+    -   **Changes**: Browser title changed to Хранение Шин. Made with Emergent badge changed to product of shbsh, link removed, and an icon added.
+-   ****: Defines Docker services.
+    -   **Summary**: Orchestrates , , ,  services.
+    -   **Changes**: Removed bind volume mounts for  and  services to prevent build folder overwrites. Updated to allow switching Nginx configuration files for testing/debugging.
+-   ****: Backend Dockerfile.
+    -   **Summary**: Builds FastAPI image.
+    -   **Changes**: Updated to include new Python dependencies (, ).
+-   ****: Frontend Dockerfile.
+    -   **Summary**: Builds React image.
+    -   **Changes**: Node.js version updated to , yarn install v1.22.22
 [1/4] Resolving packages...
-[2/4] Fetching packages...
-[3/4] Linking dependencies...
-[4/4] Building fresh packages...
-success Saved lockfile.
-Done in 0.12s., and yarn run v1.22.22
-info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command. commands.
-    -   **Changes**: Crucially updated to use  (from ) to resolve  compatibility issues. Also modified to ensure yarn run v1.22.22
-info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command. is executed correctly and the  directory is present in the final image. Changed to  and  at one point.
--   ****: Nginx web server configuration.
-    -   **Summary**: Configures Nginx to act as a reverse proxy, routing  requests to the backend and other requests to the frontend, and handles SSL.
-    -   **Changes**: Created for deployment setup. Updated to correctly resolve internal container names (e.g.,  instead of ) and proxy paths.
--   ****: GitHub Actions workflow for CI/CD.
-    -   **Summary**: Automates the deployment process (git pull, docker-compose build/up, health checks) upon pushes to the main branch.
-    -   **Changes**: Created to automate deployment. Modified multiple times to fix SSH authentication issues (using  and ensuring correct  usage) and to adjust health check logic (switching from HTTPS to HTTP, adding  and retries).
--   ****: A shell script for automated installation on the VPS.
-    -   **Summary**: Contains commands to clone the repository, set executable permissions, and run  commands for deployment.
-    -   **Changes**: Created as part of the initial deployment plan.
+success Already up-to-date.
+Done in 0.18s. changed to  and  to address compatibility and build issues.
+-   ****: Nginx configuration.
+    -   **Summary**: Reverse proxy for frontend and backend, handles SSL.
+    -   **Changes**: Repeatedly fixed throughout the trajectory due to corruption and incorrect application. Key changes include: ensuring , correct  and  paths, /, HTTP to HTTPS redirect, correct upstream server names (,  after initial fix attempts, later reverted to container names ,  for resolution issues), removal of  with  conflicts, and added error logging.
+-   ****: GitHub Actions workflow.
+    -   **Summary**: Automates deployment.
+    -   **Changes**: Multiple fixes for Git divergent branches (), health check (changed to HTTP, then adjusted again). Major additions for CI/CD: automated backup before deploy, automatic rollback on failure, integration of Playwright frontend tests with  and timeout, and replacement of yarn install v1.22.22
+[1/4] Resolving packages...
+success Already up-to-date.
+Done in 0.28s. with npm <command>
+
+Usage:
+
+npm install        install all the dependencies in your project
+npm install <foo>  add the <foo> dependency to your project
+npm test           run this project's tests
+npm run <foo>      run the script named <foo>
+npm <command> -h   quick help on <command>
+npm -l             display usage info for all commands
+npm help <term>    search for help on <term>
+npm help npm       more involved overview
+
+All commands:
+
+    access, adduser, audit, bugs, cache, ci, completion,
+    config, dedupe, deprecate, diff, dist-tag, docs, doctor,
+    edit, exec, explain, explore, find-dupes, fund, get, help,
+    help-search, hook, init, install, install-ci-test,
+    install-test, link, ll, login, logout, ls, org, outdated,
+    owner, pack, ping, pkg, prefix, profile, prune, publish,
+    query, rebuild, repo, restart, root, run-script, sbom,
+    search, set, shrinkwrap, star, stars, start, stop, team,
+    test, token, uninstall, unpublish, unstar, update, version,
+    view, whoami
+
+Specify configs in the ini-formatted file:
+    /root/.npmrc
+or on the command line via: npm <command> --key=value
+
+More configuration info: npm help config
+Configuration fields: npm help 7 config
+
+npm@10.8.2 /usr/lib/node_modules/npm for test dependencies.
+-   ****: New GitHub Actions workflow.
+    -   **Summary**: Provides a quick deployment option without running tests.
+    -   **Changes**: Newly created.
+-   **🚀 Starting deployment...
+⏹️ Stopping containers...
+🧹 Cleaning up old containers...
+🏗️ Building services...
+▶️ Starting services...
+⏳ Waiting for services to start...
+📊 Checking service status...
+🌐 Testing site accessibility...
+Site not accessible on HTTP
+HTTP/2 200 
+server: nginx/1.29.0
+date: Thu, 03 Jul 2025 22:00:36 GMT
+content-type: text/html; charset=utf-8
+content-length: 3248
+vary: Accept-Encoding
+content-disposition: inline; filename="index.html"
+accept-ranges: bytes
+etag: "04a29c59cb51fa72cc7621bfc43ebe70e45ebcbf"
+vary: Accept-Encoding
+
+✅ Deployment completed!**: Simple deployment script.
+    -   **Summary**: Executes , , .
+    -   **Changes**: Newly created.
+-   ****: Simplified Nginx configuration.
+    -   **Summary**: Used for debugging, without complex SSL setup.
+    -   **Changes**: Newly created.
+-   **🔧 Диагностика и исправление nginx...
+Использование: /app/fix-nginx.sh {check|fix|simple|test}
+  check  - проверить статус и логи
+  fix    - быстрое исправление
+  simple - переключиться на простую HTTP конфигурацию
+  test   - протестировать подключение**: Nginx diagnostic and fix script.
+    -   **Summary**: Helps debug and apply Nginx configurations.
+    -   **Changes**: Newly created.
+-   **🔧 Управление backup'ами и откатами
+
+Использование: /app/backup-manager.sh {backup|list|rollback|cleanup|status}
+
+  backup           - создать backup вручную
+  list             - показать доступные backup'ы
+  rollback <file>  - откатиться к указанному backup'у
+  cleanup [count]  - очистить старые backup'ы (по умолчанию оставить 5)
+  status           - показать состояние системы
+
+Примеры:
+  /app/backup-manager.sh backup
+  /app/backup-manager.sh list
+  /app/backup-manager.sh rollback backup_20250703_180000.tar.gz
+  /app/backup-manager.sh cleanup 10**: Backup and rollback script.
+    -   **Summary**: Manages application backups and allows reverting to previous versions.
+    -   **Changes**: Newly created.
+-   ** directory**: Contains the new automated testing setup.
+    -   **Summary**: Includes  for Playwright, ,  for creating new test boilerplate,  for executing tests, and test specification files (, ).
+    -   **Changes**: Entire directory and its contents are newly created.
+-   ****: Project documentation.
+    -   **Summary**: Provides project overview.
+    -   **Changes**: Cleaned up by removing logins/passwords. Updated with details on the new CI/CD workflow, backup system, and automated testing instructions.
+-   ****: Testing results documentation.
+    -   **Summary**: Records user problem statement, testing data, and previous agent communications, as well as the results of automated and manual tests.
+    -   **Changes**: Regularly updated with backend and frontend test results, including successful outcomes for PDF generation, dynamic fields, RetailCRM integration, phone field validation, sorting, bulk deletion, and Cyrillic support, and reports on frontend issues like non-clickable records and drag&drop.
 </code_architecture>
 
 <pending_tasks>
--   Full implementation and thorough testing of the Изменение формы записи (dynamic field addition/removal with confirmation).
--   Full implementation and thorough testing of the Изменение формы Акта (customizable PDF template).
+-   Full implementation and thorough testing of the Изменение формы записи (dynamic field addition/removal with confirmation). (Drag&drop reordering of fields is partially done, but field addition/removal not explicitly addressed.)
+-   Full implementation and thorough testing of the Изменение формы Акта (customizable PDF template editor should reflect changes made to the printed act).
 -   Confirmation of Управление пользователями access rights setup (checkboxes and admin-only creation) for all 6 blocks, and full testing.
+-   Complete the UI for mass record deletion (resolve code duplication and ensure full functionality).
+-   Implement configurable visible fields in Просмотр записей.
+-   Implement export with record order numbers and duplicate checking during import (backend is done, frontend integration and reporting duplicates needed).
 </pending_tasks>
 
 <current_work>
-Immediately before this summary request, the AI engineer was actively working on implementing a new batch of feature requests from the user, specifically focusing on UI/UX improvements and adding new functionalities. The following actions were observed:
+Immediately before this summary request, the AI engineer was actively working on addressing user feedback following the implementation of several major features. Specifically, the engineer was focused on two critical issues reported by the user in Chat 395:
 
-1.  **UI/UX Refinements**:
-    *   Removal of test login/password data from the initial login page (likely ).
-    *   Changing the browser tab title to Хранение Шин and updating the Made with Emergent badge to Made in ШБШ (modifying ).
-    *   Addressing redundant UI elements by consolidating Изменение формы Акта and Настройка атрибутов записи to show only one editing window instead of three.
+1.  **RetailCRM Status Correction**: The user requested changing the RetailCRM filter status from товар на складе to товар на выдачу for creating records. The AI engineer has successfully modified  to reflect this change (Chat 396-397). This part is complete on the backend.
+2.  **PDF Act Editor Functionality**: The user reported that changes made to the act's content and design were not reflecting in the act's editor, which defeats the purpose of the dynamic editor. This indicates an issue with how the act template data is loaded, saved, or rendered within the frontend editor component. The AI engineer had just started investigating this by looking at the relevant section in  for Изменение формы Акта (Chat 398-401).
 
-2.  **Functional Enhancements**:
-    *   Started working on resolving the no server connection error during PDF act printing, implying changes to both frontend (calling the PDF generation endpoint) and backend (ensuring the PDF endpoint works).
-    *   Added a new access permission for deleting records and implemented the backend endpoint for record deletion (likely modifications to  for a new API route and permission checks).
-    *   Began implementing sorting functionality in the Просмотр записей table, with specific rules for numerical, date, and alphabetical (Russian then English) sorting.
-    *   Continued work on enabling the addition of *new* attributes (fields) in the Настройка атрибутов записи section, not just editing existing ones.
-
-The last successful action was writing to  and restarting supervisorctl (Chat 202), indicating active development on the frontend components for these new features. The AI engineer then stated, Теперь все основные изменения внесены. Давайте закоммитим изменения и задеплоим на сервер (Chat 203), signaling that this batch of feature development is considered complete for a commit and deployment.
+Additionally, the frontend UI for **mass record deletion** was noted as *partially implemented* with existing code duplication (Chat 394). The backend for bulk deletion, RetailCRM integrations (excluding the latest status change), PDF generation, phone field length, and sorting by record number have all been confirmed as working via comprehensive backend testing (Chat 393-394). The automated testing infrastructure is also set up.
 </current_work>
 
 <optional_next_step>
-Commit and deploy the latest changes to the server.
+The immediate next step is to continue debugging and fixing the PDF Act editor functionality in  to ensure that it correctly loads and allows editing of the act's template.
 </optional_next_step>
