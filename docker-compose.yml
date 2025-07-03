@@ -40,8 +40,6 @@ services:
       - backend
     environment:
       - REACT_APP_BACKEND_URL=https://baseshinomontaz.ru/api
-    volumes:
-      - ./frontend:/app
 
   nginx:
     image: nginx:alpine
