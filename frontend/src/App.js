@@ -182,7 +182,13 @@ function App() {
 
       if (response.ok) {
         const result = await response.json();
-        const link = `${window.location.origin}/calculator/result/${result.unique_id}`;
+        const link = `${window.location.origin}/calculator/result/${result.short_id}`;
+        
+        // Store the link for display
+        setCalculationResult(prev => ({
+          ...prev,
+          saved_link: link
+        }));
         
         // Copy to clipboard
         if (navigator.clipboard) {
@@ -199,7 +205,7 @@ function App() {
           setSuccess('Ссылка скопирована в буфер обмена!');
         }
         
-        return result.unique_id;
+        return result.short_id;
       } else {
         setError('Ошибка сохранения результата');
       }
