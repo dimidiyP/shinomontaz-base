@@ -15,7 +15,9 @@ class TireCalculatorAPITester(unittest.TestCase):
                     self.base_url = line.strip().split('=')[1].strip('"\'')
                     break
         print(f"Using backend URL: {self.base_url}")
-        self.saved_result_id = None
+        
+    # Class variable to store the saved result ID
+    saved_result_id = None
 
     def test_1_get_passenger_settings(self):
         """Test getting calculator settings for passenger vehicles"""
