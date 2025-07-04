@@ -102,7 +102,20 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Протестировать новый калькулятор шиномонтажа. Это большая новая функция с публичным доступом."
+user_problem_statement: "При попытке посмотреть записи выдает ошибку. Так же в меню пропали калькулятор, и не появилась админка"
+
+backend:
+  - task: "Records API and authentication"
+    implemented: true
+    working: true
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "Backend APIs протестированы и работают корректно: авторизация admin/admin работает, GET /api/storage-records возвращает записи, GET /api/form-config работает, GET /api/storage-records/{record_id} работает. Проблема с просмотром записей скорее всего на frontend."
 
 backend:
   - task: "PDF generation endpoint"
