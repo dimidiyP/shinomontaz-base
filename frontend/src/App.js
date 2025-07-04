@@ -841,9 +841,7 @@ function App() {
   };
 
   // If it's a public calculator route, don't require authentication
-  const isCalculatorRoute = window.location.pathname.startsWith('/calculator');
-  
-  if (!isAuthenticated && !isCalculatorRoute) {
+  if (!isAuthenticated && !window.location.pathname.startsWith('/calculator')) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
         <div className="bg-white rounded-xl shadow-xl p-8 w-full max-w-md">
