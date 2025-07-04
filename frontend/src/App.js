@@ -840,8 +840,8 @@ function App() {
 
   // Helper function to get field label from configuration
   const getFieldLabel = (fieldName) => {
-    if (!formConfig) return fieldName;
-    const field = formConfig.find(f => f.name === fieldName);
+    if (!formConfig || !formConfig.fields) return fieldName;
+    const field = formConfig.fields.find(f => f.name === fieldName);
     return field ? field.label : fieldName;
   };
   useEffect(() => {
