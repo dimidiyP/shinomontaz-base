@@ -1352,15 +1352,16 @@ function App() {
                 </button>
               )}
 
-              {hasPermission('calculator_management') && (
+              <div className="bg-gray-100 p-6 rounded-xl">
+                <h3 className="text-xl font-semibold mb-2">Публичный калькулятор</h3>
+                <p className="text-gray-600 mb-4">Ссылка для клиентов</p>
                 <button
-                  onClick={() => {setCurrentPage('calculator-admin'); clearMessages();}}
-                  className="bg-purple-600 hover:bg-purple-700 text-white p-6 rounded-xl shadow-lg transition-colors"
+                  onClick={() => window.open('/calculator', '_blank')}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium"
                 >
-                  <h3 className="text-xl font-semibold mb-2">Управление калькулятором</h3>
-                  <p className="text-purple-100">Настроить услуги и цены калькулятора</p>
+                  Открыть калькулятор
                 </button>
-              )}
+              </div>
             </div>
           </div>
         )}
