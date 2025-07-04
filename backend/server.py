@@ -345,11 +345,10 @@ class RetailCRMIntegration:
                 'Content-Type': 'application/json'
             }
             
-            # Filter orders where custom field 'chranenie' = true, status = 'in-stock', and paymentStatus = 'paid'
+            # Filter orders where custom field 'chranenie' = true and status = 'in-stock'
             params = {
                 'filter[customFields][chranenie]': 'true',
                 'filter[status]': 'in-stock',
-                'filter[paymentStatus]': 'paid',
                 'limit': 100
             }
             
