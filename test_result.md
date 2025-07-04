@@ -452,11 +452,13 @@ test_plan:
     - "Calculator settings API"
     - "Calculator calculation API"
     - "Calculator save and retrieve result API"
+    - "Public calculator functionality"
   stuck_tasks:
     - "PDF download functionality"
     - "Detailed record view with retail_status_text"
     - "Status transitions for storage records"
     - "Drag & Drop в редакторе полей"
+    - "Public calculator functionality"
   test_all: false
   test_priority: "high_first"
 
