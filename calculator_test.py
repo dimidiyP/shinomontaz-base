@@ -263,7 +263,7 @@ class TireCalculatorAPITester(unittest.TestCase):
         
         # Verify the structure of the response
         self.assertIn("unique_id", data, "Unique ID not found in response")
-        self.assertEqual(data["unique_id"], self.saved_result_id, "Unique ID does not match")
+        self.assertEqual(data["unique_id"], TireCalculatorAPITester.saved_result_id, "Unique ID does not match")
         self.assertIn("calculation", data, "Calculation not found in response")
         self.assertIn("created_at", data, "Created at timestamp not found")
         
