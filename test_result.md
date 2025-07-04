@@ -430,9 +430,9 @@ frontend:
     implemented: true
     working: false
     file: "App.js"
-    stuck_count: 1
+    stuck_count: 2
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: "NA"
         agent: "testing"
@@ -440,6 +440,9 @@ frontend:
       - working: false
         agent: "testing"
         comment: "Публичный калькулятор недоступен без авторизации. При попытке перейти по URL /calculator происходит перенаправление на страницу логина. Код содержит логику для обработки маршрута /calculator без авторизации (в useEffect), но она не работает. Даже после авторизации и перехода на /calculator не отображается страница калькулятора."
+      - working: false
+        agent: "testing"
+        comment: "После исправления роутинга публичный калькулятор все еще недоступен без авторизации. При попытке перейти по URL /calculator происходит перенаправление на страницу логина. Проблема в том, что функция isPublicCalculatorRoute() вызывается корректно, но условие в коде не срабатывает должным образом. Требуется дополнительное исследование и исправление."
 
 metadata:
   created_by: "main_agent"
