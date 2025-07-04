@@ -77,6 +77,11 @@ function App() {
   const [calculatorResult, setCalculatorResult] = useState(null);
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [infoModalContent, setInfoModalContent] = useState({});
+  
+  // Calculator admin state
+  const [adminCalculatorSettings, setAdminCalculatorSettings] = useState({});
+  const [editingVehicleType, setEditingVehicleType] = useState('passenger');
+  const [showCalculatorAdmin, setShowCalculatorAdmin] = useState(false);
 
   // Check if current path is a public calculator route
   const isCalculatorRoute = window.location.pathname.startsWith('/calculator');
