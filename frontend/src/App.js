@@ -1084,11 +1084,36 @@ function App() {
                           </div>
                         </div>
                         
+                        {/* Display saved link if available */}
+                        {calculationResult.saved_link && (
+                          <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                            <p className="text-sm text-green-700 mb-2">Ссылка для передачи расчета:</p>
+                            <div className="flex items-center space-x-2">
+                              <input
+                                type="text"
+                                value={calculationResult.saved_link}
+                                readOnly
+                                className="flex-1 px-3 py-2 text-sm border border-green-300 rounded-lg bg-white"
+                              />
+                              <button
+                                onClick={() => {
+                                  navigator.clipboard.writeText(calculationResult.saved_link);
+                                  setSuccess('Ссылка скопирована!');
+                                }}
+                                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm rounded-lg"
+                              >
+                                Копировать
+                              </button>
+                            </div>
+                            <p className="text-xs text-green-600 mt-1">Ссылка действительна 7 дней</p>
+                          </div>
+                        )}
+                        
                         <button
                           onClick={saveCalculationResult}
                           className="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium"
                         >
-                          Сохранить и получить ссылку
+                          {calculationResult.saved_link ? 'Обновить ссылку' : 'Сохранить и получить ссылку'}
                         </button>
                       </div>
                     )}
