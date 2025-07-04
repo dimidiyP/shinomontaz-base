@@ -373,6 +373,22 @@ class RetailCRMIntegration:
         
         for order in orders:
             try:
+                # Проверяем статус заказа - должен быть готов к выдаче
+                order_status = order.get('status', '')
+                if order_status not in ['in-stock', 'client-confirmed']:
+                    continue
+                
+                # Проверяем статус оплаты - должен быть оплачен
+                has_paid_payment = False
+                payments = order.get('payments', {})
+                for payment_id, payment in payments.items():
+                    if payment.get('status') == 'paid':
+                        has_paid_payment = True
+                        break
+                
+                if not has_paid_payment:
+                    continue
+                
                 # Create a storage record format compatible entry
                 storage_record = {
                     "record_id": str(uuid.uuid4()),
@@ -392,7 +408,7 @@ class RetailCRMIntegration:
                     "retailcrm_external_id": order.get('externalId'),
                     "retailcrm_order_number": order.get('number', ''),  # Номер заказа CRM
                     "retailcrm_status": order.get('status', ''),  # Текущий статус в RetailCRM
-                    "retailcrm_payment_status": order.get('paymentStatus', ''),  # Статус оплаты
+                    "retailcrm_payment_status": self.extract_payment_status(order),  # Статус оплаты
                     "retailcrm_sync_count": 0,  # Счетчик синхронизаций
                     "source": "retailcrm"
                 }
