@@ -1145,15 +1145,6 @@ function App() {
             >
               {loading ? 'Вход...' : 'Войти'}
             </button>
-
-            {/* Calculator Test Button */}
-            <button
-              type="button"
-              onClick={() => setCurrentPage('public-calculator')}
-              className="w-full bg-green-600 hover:bg-green-700 text-white py-3 px-4 rounded-lg font-medium transition-colors"
-            >
-              Тест калькулятора (публичный доступ)
-            </button>
           </form>
         </div>
       </div>
