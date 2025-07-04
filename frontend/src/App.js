@@ -2269,6 +2269,177 @@ function App() {
           </div>
         )}
 
+        {/* Calculator Admin Page */}
+        {currentPage === 'calculator-admin' && (
+          <div className="min-h-screen bg-gray-50">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+              {/* Header */}
+              <div className="mb-8">
+                <button
+                  onClick={() => setCurrentPage('dashboard')}
+                  className="text-gray-500 hover:text-gray-700 mb-4"
+                >
+                  ← Назад к панели управления
+                </button>
+                <h2 className="text-2xl font-bold text-gray-900">Управление калькулятором шиномонтажа</h2>
+              </div>
+
+              {/* Vehicle Type Selector */}
+              <div className="mb-6">
+                <div className="flex space-x-4">
+                  <button
+                    onClick={() => {
+                      setEditingVehicleType('passenger');
+                      loadAdminCalculatorSettings();
+                    }}
+                    className={`px-6 py-3 rounded-lg font-medium ${
+                      editingVehicleType === 'passenger'
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    }`}
+                  >
+                    Легковой транспорт
+                  </button>
+                  <button
+                    onClick={() => {
+                      setEditingVehicleType('truck');
+                      loadAdminCalculatorSettings();
+                    }}
+                    className={`px-6 py-3 rounded-lg font-medium ${
+                      editingVehicleType === 'truck'
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    }`}
+                  >
+                    Грузовой транспорт
+                  </button>
+                </div>
+              </div>
+
+              {adminCalculatorSettings[editingVehicleType] && (
+                <div className="space-y-8">
+                  {/* General Settings */}
+                  <div className="bg-white rounded-xl shadow-lg p-6">
+                    <h3 className="text-lg font-medium text-gray-900 mb-4">Общие настройки</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Название
+                        </label>
+                        <input
+                          type="text"
+                          value={adminCalculatorSettings[editingVehicleType]?.name || ''}
+                          onChange={(e) => setAdminCalculatorSettings(prev => ({
+                            ...prev,
+                            [editingVehicleType]: {
+                              ...prev[editingVehicleType],
+                              name: e.target.value
+                            }
+                          }))}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Стоимость за час (рублей)
+                        </label>
+                        <input
+                          type="number"
+                          value={adminCalculatorSettings[editingVehicleType]?.hourly_rate || 0}
+                          onChange={(e) => setAdminCalculatorSettings(prev => ({
+                            ...prev,
+                            [editingVehicleType]: {
+                              ...prev[editingVehicleType],
+                              hourly_rate: parseInt(e.target.value) || 0
+                            }
+                          }))}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Services */}
+                  <div className="bg-white rounded-xl shadow-lg p-6">
+                    <h3 className="text-lg font-medium text-gray-900 mb-4">Услуги</h3>
+                    <div className="space-y-4">
+                      {adminCalculatorSettings[editingVehicleType]?.services?.map((service, index) => (
+                        <div key={service.id} className="border border-gray-200 rounded-lg p-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Название услуги
+                              </label>
+                              <input
+                                type="text"
+                                value={service.name}
+                                onChange={(e) => {
+                                  const newSettings = {...adminCalculatorSettings};
+                                  newSettings[editingVehicleType].services[index].name = e.target.value;
+                                  setAdminCalculatorSettings(newSettings);
+                                }}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Описание
+                              </label>
+                              <input
+                                type="text"
+                                value={service.description}
+                                onChange={(e) => {
+                                  const newSettings = {...adminCalculatorSettings};
+                                  newSettings[editingVehicleType].services[index].description = e.target.value;
+                                  setAdminCalculatorSettings(newSettings);
+                                }}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                              />
+                            </div>
+                          </div>
+                          
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Время выполнения по размерам (минуты)
+                            </label>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                              {Object.entries(service.time_by_size).map(([size, time]) => (
+                                <div key={size} className="flex items-center space-x-2">
+                                  <label className="text-sm text-gray-600 w-12">{size}:</label>
+                                  <input
+                                    type="number"
+                                    value={time}
+                                    onChange={(e) => {
+                                      const newSettings = {...adminCalculatorSettings};
+                                      newSettings[editingVehicleType].services[index].time_by_size[size] = parseInt(e.target.value) || 0;
+                                      setAdminCalculatorSettings(newSettings);
+                                    }}
+                                    className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
+                                  />
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Save Button */}
+                  <div className="bg-white rounded-xl shadow-lg p-6">
+                    <button
+                      onClick={() => saveCalculatorSettings(editingVehicleType, adminCalculatorSettings[editingVehicleType])}
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium"
+                    >
+                      Сохранить настройки
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Public Calculator Page */}
         {currentPage === 'public-calculator' && (
           <div className="min-h-screen bg-gray-50">
