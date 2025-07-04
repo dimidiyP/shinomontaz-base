@@ -2396,7 +2396,6 @@ function App() {
                     <div>
                       <h3 className="text-lg font-medium text-gray-900 mb-4">Стоимость</h3>
                       <div className="space-y-2">
-                        <p><span className="font-medium">Время:</span> {calculatorResult.calculation.total_time} минут</p>
                         <p><span className="font-medium">Стоимость:</span> {calculatorResult.calculation.total_cost} рублей</p>
                         <p><span className="font-medium">Дата расчета:</span> {new Date(calculatorResult.created_at).toLocaleDateString('ru-RU')}</p>
                       </div>
@@ -2663,7 +2662,6 @@ function App() {
                     <div>
                       <h3 className="text-lg font-medium text-gray-900 mb-4">Стоимость</h3>
                       <div className="space-y-2">
-                        <p><span className="font-medium">Время:</span> {calculatorResult.calculation.total_time} минут</p>
                         <p><span className="font-medium">Стоимость:</span> {calculatorResult.calculation.total_cost} рублей</p>
                         <p><span className="font-medium">Дата расчета:</span> {new Date(calculatorResult.created_at).toLocaleDateString('ru-RU')}</p>
                       </div>
