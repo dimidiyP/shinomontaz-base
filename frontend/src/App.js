@@ -904,7 +904,24 @@ function App() {
   };
 
   // If it's a public calculator route, don't require authentication
-  if (!isAuthenticated && !window.location.pathname.startsWith('/calculator')) {
+  const path = window.location.pathname;
+  const isCalculatorRoute = path.startsWith('/calculator');
+  
+  // Set calculator page if on calculator route
+  useEffect(() => {
+    if (isCalculatorRoute) {
+      if (path === '/calculator') {
+        setCurrentPage('public-calculator');
+        loadCalculatorSettings('passenger');
+      } else if (path.includes('/result/')) {
+        const resultId = path.split('/result/')[1];
+        setCurrentPage('calculator-result');
+        loadCalculatorResult(resultId);
+      }
+    }
+  }, []);
+  
+  if (!isAuthenticated && !isCalculatorRoute) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
         <div className="bg-white rounded-xl shadow-xl p-8 w-full max-w-md">
