@@ -1724,31 +1724,31 @@ function App() {
                         className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                         onClick={() => handleSort('full_name')}
                       >
-                        ФИО {sortConfig.key === 'full_name' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                        {getFieldLabel('full_name')} {sortConfig.key === 'full_name' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                       </th>
                       <th 
                         className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                         onClick={() => handleSort('phone')}
                       >
-                        Телефон {sortConfig.key === 'phone' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                        {getFieldLabel('phone')} {sortConfig.key === 'phone' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                       </th>
                       <th 
                         className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                         onClick={() => handleSort('car_brand')}
                       >
-                        Машина {sortConfig.key === 'car_brand' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                        {getFieldLabel('car_brand')} {sortConfig.key === 'car_brand' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                       </th>
                       <th 
                         className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                         onClick={() => handleSort('parameters')}
                       >
-                        Параметры {sortConfig.key === 'parameters' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                        {getFieldLabel('parameters')} {sortConfig.key === 'parameters' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                       </th>
                       <th 
                         className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                         onClick={() => handleSort('size')}
                       >
-                        Размер {sortConfig.key === 'size' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                        {getFieldLabel('size')} {sortConfig.key === 'size' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                       </th>
                       <th 
                         className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
