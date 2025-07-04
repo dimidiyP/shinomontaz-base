@@ -2642,63 +2642,6 @@ function App() {
         )}
 
         {/* Calculator Result Page */}
-        {currentPage === 'calculator-result' && calculatorResult && (
-          <div className="min-h-screen bg-gray-50">
-            <div className="container mx-auto px-4 py-8">
-              <div className="max-w-4xl mx-auto">
-                <div className="bg-white rounded-xl shadow-lg p-8">
-                  <h1 className="text-3xl font-bold text-gray-900 mb-6">Результат расчета</h1>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                    <div>
-                      <h3 className="text-lg font-medium text-gray-900 mb-4">Параметры</h3>
-                      <div className="space-y-2">
-                        <p><span className="font-medium">Тип транспорта:</span> {calculatorResult.calculation.vehicle_type === 'passenger' ? 'Легковой' : 'Грузовой'}</p>
-                        <p><span className="font-medium">Размер шин:</span> {calculatorResult.calculation.tire_size}</p>
-                        <p><span className="font-medium">Количество колес:</span> {calculatorResult.calculation.wheel_count}</p>
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <h3 className="text-lg font-medium text-gray-900 mb-4">Стоимость</h3>
-                      <div className="space-y-2">
-                        <p><span className="font-medium">Стоимость:</span> {calculatorResult.calculation.total_cost} рублей</p>
-                        <p><span className="font-medium">Дата расчета:</span> {new Date(calculatorResult.created_at).toLocaleDateString('ru-RU')}</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="mb-6">
-                    <h3 className="text-lg font-medium text-gray-900 mb-4">Выбранные услуги</h3>
-                    <div className="space-y-2">
-                      {calculatorResult.calculation.breakdown.services.map(service => (
-                        <div key={service.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                          <span>{service.name}</span>
-                          <span>{service.total_time} мин</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="flex space-x-4">
-                    <button
-                      onClick={() => window.location.href = '/calculator'}
-                      className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium"
-                    >
-                      Создать новый расчет
-                    </button>
-                    <button
-                      onClick={() => window.print()}
-                      className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-medium"
-                    >
-                      Печать
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Info Modal */}
         {showInfoModal && (
