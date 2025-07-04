@@ -897,7 +897,14 @@ function App() {
     setSuccess('');
   };
 
-  if (!isAuthenticated) {
+  // Check if current path is a public calculator route
+  const isPublicCalculatorRoute = () => {
+    const path = window.location.pathname;
+    return path.startsWith('/calculator');
+  };
+
+  // If it's a public calculator route, don't require authentication
+  if (!isAuthenticated && !isPublicCalculatorRoute()) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
         <div className="bg-white rounded-xl shadow-xl p-8 w-full max-w-md">
