@@ -12,71 +12,40 @@ function App() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  // Login form state
-  const [loginData, setLoginData] = useState({
-    username: '',
-    password: ''
-  });
+  // Check if current path is a public calculator route
+  const isCalculatorRoute = window.location.pathname.startsWith('/calculator');
 
-  // Storage form state
-  const [storageData, setStorageData] = useState({
-    full_name: '',
-    phone: '',
-    phone_additional: '',
-    car_brand: '',
-    parameters: '',
-    size: '',
-    storage_location: ''
-  });
-
-  // Search state
-  const [searchData, setSearchData] = useState({
-    query: '',
-    searchType: 'record_number'
-  });
-  const [searchResults, setSearchResults] = useState([]);
-
-  // Records state
-  const [records, setRecords] = useState([]);
-  const [createdRecord, setCreatedRecord] = useState(null);
-  const [filteredRecords, setFilteredRecords] = useState([]);
-  const [filters, setFilters] = useState({});
-  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
-
-  // Users management state
-  const [users, setUsers] = useState([]);
-  const [newUser, setNewUser] = useState({
-    username: '',
-    password: '',
-    role: 'user',
-    permissions: ['store', 'view']
-  });
-
-  // Form configuration state
-  const [editFormConfig, setEditFormConfig] = useState(null);
-  const [pdfTemplate, setPdfTemplate] = useState('');
-  const [draggedIndex, setDraggedIndex] = useState(null);
-  const [pdfTemplateLoaded, setPdfTemplateLoaded] = useState(false);
-  
-  // Record detail state
-  const [selectedRecord, setSelectedRecord] = useState(null);
-  const [showRecordDetail, setShowRecordDetail] = useState(false);
-  
-  // Bulk operations state
-  const [bulkMode, setBulkMode] = useState(false);
-  const [selectedRecords, setSelectedRecords] = useState(new Set());
-
-  // Calculator state
-  const [calculatorSettings, setCalculatorSettings] = useState({});
-  const [selectedVehicleType, setSelectedVehicleType] = useState('passenger');
-  const [selectedTireSize, setSelectedTireSize] = useState('R16');
-  const [wheelCount, setWheelCount] = useState(4);
-  const [selectedServices, setSelectedServices] = useState([]);
-  const [selectedOptions, setSelectedOptions] = useState([]);
-  const [calculationResult, setCalculationResult] = useState(null);
-  const [calculatorResult, setCalculatorResult] = useState(null);
-  const [showInfoModal, setShowInfoModal] = useState(false);
-  const [infoModalContent, setInfoModalContent] = useState({});
+  // Set initial page based on URL
+  useEffect(() => {
+    if (isCalculatorRoute) {
+      const path = window.location.pathname;
+      if (path === '/calculator') {
+        setCurrentPage('public-calculator');
+        // Initialize calculator settings
+        setTimeout(() => {
+          loadCalculatorSettings('passenger');
+        }, 100);
+      } else if (path.includes('/result/')) {
+        const resultId = path.split('/result/')[1];
+        setCurrentPage('calculator-result');
+        // Load result data
+        setTimeout(() => {
+          loadCalculatorResult(resultId);
+        }, 100);
+      }
+    } else {
+      // Check for authentication
+      const token = localStorage.getItem('token');
+      const userData = localStorage.getItem('user');
+      
+      if (token && userData) {
+        setIsAuthenticated(true);
+        setUser(JSON.parse(userData));
+        setCurrentPage('dashboard');
+        loadFormConfig();
+      }
+    }
+  }, []);
 
   // Function to sort records
   const sortRecords = (recordsToSort, key, direction) => {
