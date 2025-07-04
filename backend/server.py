@@ -457,6 +457,19 @@ class RetailCRMIntegration:
             return f"{total_quantity} шт." if total_quantity > 0 else "Не указано"
         return "Не указано"
     
+    def extract_payment_status(self, order):
+        """Extract payment status from order payments"""
+        payments = order.get('payments', {})
+        if not payments:
+            return "not-paid"
+        
+        # Ищем оплаченные платежи
+        for payment_id, payment in payments.items():
+            if payment.get('status') == 'paid':
+                return "paid"
+        
+        return "not-paid"
+    
     def generate_next_record_id(self):
         """Generate next record ID similar to existing logic"""
         last_record = storage_records_collection.find_one(
