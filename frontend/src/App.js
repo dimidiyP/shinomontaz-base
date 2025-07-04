@@ -1344,7 +1344,13 @@ function App() {
 
               {hasPermission('calculator_management') && (
                 <button
-                  onClick={() => {setCurrentPage('calculator-admin'); clearMessages();}}
+                  onClick={() => {
+                    setCurrentPage('calculator-admin'); 
+                    clearMessages();
+                    // Load calculator settings when entering admin
+                    loadCalculatorSettings('passenger');
+                    loadCalculatorSettings('truck');
+                  }}
                   className="bg-purple-600 hover:bg-purple-700 text-white p-6 rounded-xl shadow-lg transition-colors"
                 >
                   <h3 className="text-xl font-semibold mb-2">Управление калькулятором</h3>
