@@ -1362,17 +1362,185 @@ def test_30_pdf_template_system(self):
         
         return True
 
+def test_31_admin_login_with_correct_credentials(self):
+    """Test admin login with correct credentials (admin/admin)"""
+    print("\n🔍 Testing Admin Login with admin/admin...")
+    response = requests.post(
+        f"{self.base_url}/api/login",
+        json={"username": "admin", "password": "admin"}
+    )
+    
+    self.assertEqual(response.status_code, 200, f"Admin login failed with admin/admin: {response.text if response.status_code != 200 else ''}")
+    data = response.json()
+    self.assertIn("access_token", data, "Token not found in response")
+    self.admin_token = data["access_token"]
+    self.assertEqual(data["user"]["role"], "admin", "User role is not admin")
+    print("✅ Admin login successful with admin/admin credentials")
+    return True
+
+def test_32_get_storage_records(self):
+    """Test getting all storage records"""
+    print("\n🔍 Testing GET /api/storage-records...")
+    
+    # First login with admin/admin
+    self.test_31_admin_login_with_correct_credentials()
+    
+    headers = {"Authorization": f"Bearer {self.admin_token}"}
+    response = requests.get(f"{self.base_url}/api/storage-records", headers=headers)
+    
+    self.assertEqual(response.status_code, 200, f"Failed to get storage records: {response.text if response.status_code != 200 else ''}")
+    data = response.json()
+    self.assertIn("records", data, "Records not found in response")
+    
+    # Print the number of records found
+    print(f"✅ Retrieved {len(data['records'])} storage records")
+    
+    # Check if there are any records
+    if len(data["records"]) == 0:
+        print("⚠️ No storage records found in the database")
+    else:
+        print(f"✅ First record ID: {data['records'][0]['record_id']}")
+        print(f"✅ First record number: {data['records'][0]['record_number']}")
+    
+    return True
+
+def test_33_get_form_config(self):
+    """Test getting form configuration"""
+    print("\n🔍 Testing GET /api/form-config...")
+    
+    # First login with admin/admin if not already logged in
+    if not self.admin_token:
+        self.test_31_admin_login_with_correct_credentials()
+    
+    headers = {"Authorization": f"Bearer {self.admin_token}"}
+    response = requests.get(f"{self.base_url}/api/form-config", headers=headers)
+    
+    self.assertEqual(response.status_code, 200, f"Failed to get form config: {response.text if response.status_code != 200 else ''}")
+    data = response.json()
+    self.assertIn("fields", data, "Fields not found in form config")
+    
+    # Print the number of fields in the form config
+    print(f"✅ Form config retrieved successfully with {len(data['fields'])} fields")
+    
+    # Print the field names
+    field_names = [field.get("name") for field in data.get("fields", [])]
+    print(f"✅ Form fields: {', '.join(field_names)}")
+    
+    return True
+
+def test_34_get_specific_record(self):
+    """Test getting a specific record by ID"""
+    print("\n🔍 Testing GET /api/storage-records/{record_id}...")
+    
+    # First login with admin/admin if not already logged in
+    if not self.admin_token:
+        self.test_31_admin_login_with_correct_credentials()
+    
+    # The specific record ID mentioned in the review request
+    record_id = "1fd43bec-4ca6-4ed9-904b-830586467125"
+    
+    headers = {"Authorization": f"Bearer {self.admin_token}"}
+    response = requests.get(f"{self.base_url}/api/storage-records/{record_id}", headers=headers)
+    
+    if response.status_code == 200:
+        data = response.json()
+        self.assertIn("record", data, "Record not found in response")
+        print(f"✅ Successfully retrieved record with ID: {record_id}")
+        print(f"✅ Record number: {data['record'].get('record_number')}")
+        print(f"✅ Full name: {data['record'].get('full_name')}")
+        print(f"✅ Status: {data['record'].get('status')}")
+        return True
+    elif response.status_code == 404:
+        print(f"⚠️ Record with ID {record_id} not found in the database")
+        
+        # Let's check if there are any records in the database
+        all_records_response = requests.get(f"{self.base_url}/api/storage-records", headers=headers)
+        if all_records_response.status_code == 200:
+            all_records_data = all_records_response.json()
+            if len(all_records_data.get("records", [])) > 0:
+                print(f"✅ There are {len(all_records_data['records'])} records in the database")
+                print(f"✅ First available record ID: {all_records_data['records'][0]['record_id']}")
+            else:
+                print("⚠️ No records found in the database")
+        
+        return False
+    else:
+        self.fail(f"Unexpected status code: {response.status_code}, Response: {response.text}")
+        return False
+
+def test_35_check_database_records(self):
+    """Check if there are records in the database for testing"""
+    print("\n🔍 Checking database records...")
+    
+    # First login with admin/admin if not already logged in
+    if not self.admin_token:
+        self.test_31_admin_login_with_correct_credentials()
+    
+    headers = {"Authorization": f"Bearer {self.admin_token}"}
+    response = requests.get(f"{self.base_url}/api/storage-records", headers=headers)
+    
+    self.assertEqual(response.status_code, 200, f"Failed to get storage records: {response.text if response.status_code != 200 else ''}")
+    data = response.json()
+    
+    # Check if there are any records
+    if len(data.get("records", [])) == 0:
+        print("⚠️ No records found in the database")
+        
+        # Create a test record
+        print("Creating a test record...")
+        storage_data = {
+            "full_name": "Test User",
+            "phone": "9991234567",
+            "phone_additional": "9998887766",
+            "car_brand": "Test Car",
+            "parameters": "Test Parameters",
+            "size": "4 шт",
+            "storage_location": "Бекетова 3а.к15"
+        }
+        
+        create_response = requests.post(
+            f"{self.base_url}/api/storage-records", 
+            json=storage_data, 
+            headers=headers
+        )
+        
+        if create_response.status_code == 200:
+            create_data = create_response.json()
+            print(f"✅ Created test record with ID: {create_data['record']['record_id']}")
+            return True
+        else:
+            print(f"⚠️ Failed to create test record: {create_response.text}")
+            return False
+    else:
+        print(f"✅ Found {len(data['records'])} records in the database")
+        
+        # Check if the specific record exists
+        specific_record_id = "1fd43bec-4ca6-4ed9-904b-830586467125"
+        specific_record_exists = False
+        
+        for record in data["records"]:
+            if record.get("record_id") == specific_record_id:
+                specific_record_exists = True
+                print(f"✅ Found specific record with ID: {specific_record_id}")
+                break
+        
+        if not specific_record_exists:
+            print(f"⚠️ Specific record with ID {specific_record_id} not found")
+            print(f"✅ Available record IDs: {[record.get('record_id') for record in data['records'][:3]]}...")
+        
+        return True
+
 def run_tests():
     # Create test suite
     suite = unittest.TestSuite()
     tester = TireStorageAPITester()
     
-    # Add tests in order
-    suite.addTest(TireStorageAPITester('test_30_pdf_template_system'))
-    
-    # Add other tests if needed
-    # suite.addTest(TireStorageAPITester('test_1_get_form_config'))
-    # suite.addTest(TireStorageAPITester('test_2_create_storage_record'))
+    # Add tests in order for the specific issues mentioned in the review request
+    suite.addTest(TireStorageAPITester('test_31_admin_login_with_correct_credentials'))
+    suite.addTest(TireStorageAPITester('test_32_get_storage_records'))
+    suite.addTest(TireStorageAPITester('test_33_get_form_config'))
+    suite.addTest(TireStorageAPITester('test_34_get_specific_record'))
+    suite.addTest(TireStorageAPITester('test_35_check_database_records'))
     
     # Run tests
     runner = unittest.TextTestRunner(verbosity=2)
