@@ -1512,19 +1512,38 @@ async def save_calculator_result(request: CalculatorRequest):
     # Calculate the result first
     calculation = await calculate_service_cost(request)
     
-    # Generate unique ID
-    unique_id = str(uuid.uuid4())
+    # Generate short unique ID
+    # Find the highest existing number
+    existing_results = calculator_results_collection.find({}, {"short_id": 1}).sort("short_id", -1).limit(1)
+    highest_num = 0
+    for result in existing_results:
+        short_id = result.get("short_id", "rez0")
+        if short_id.startswith("rez"):
+            try:
+                highest_num = int(short_id[3:])
+            except:
+                pass
+    
+    # Generate next ID
+    next_num = highest_num + 1
+    short_id = f"rez{next_num}"
+    
+    # Set expiration date (1 week from now)
+    from datetime import timedelta
+    expires_at = datetime.now() + timedelta(weeks=1)
     
     # Save to database
     result_doc = {
-        "unique_id": unique_id,
+        "short_id": short_id,
+        "unique_id": str(uuid.uuid4()),  # Keep UUID for internal use
         "calculation": calculation,
-        "created_at": datetime.now()
+        "created_at": datetime.now(),
+        "expires_at": expires_at
     }
     
     calculator_results_collection.insert_one(result_doc)
     
-    return {"unique_id": unique_id, "calculation": calculation}
+    return {"short_id": short_id, "calculation": calculation}
 
 @app.get("/api/calculator/result/{short_id}")
 async def get_calculator_result(short_id: str):
