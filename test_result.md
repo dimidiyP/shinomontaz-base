@@ -345,6 +345,50 @@ backend:
         agent: "testing"
         comment: "Повторное тестирование подтвердило, что массовое удаление работает корректно. Успешно удалены записи, оставив только 3 записи в базе данных, как требовалось."
 
+  - task: "Calculator settings API"
+    implemented: true
+    working: true
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Необходимо протестировать API настроек калькулятора шиномонтажа"
+      - working: true
+        agent: "testing"
+        comment: "Тестирование GET /api/calculator/settings/passenger и GET /api/calculator/settings/truck показало, что API настроек калькулятора работает корректно. Настройки для легкового и грузового транспорта успешно возвращаются с правильной структурой данных, включая почасовые ставки, услуги и дополнительные опции."
+
+  - task: "Calculator calculation API"
+    implemented: true
+    working: true
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Необходимо протестировать API расчета стоимости шиномонтажа"
+      - working: true
+        agent: "testing"
+        comment: "Тестирование POST /api/calculator/calculate показало, что API расчета стоимости работает корректно. Для легкового автомобиля (R16, 4 колеса, услуги mount_demount и balancing) правильно рассчитывается время (120 минут) и стоимость (4000 рублей). Для грузового автомобиля с опцией heavy_duty (R22.5, 2 колеса, услуга mount_demount) правильно применяется множитель времени 1.3, итоговое время 156 минут, стоимость 7800 рублей."
+
+  - task: "Calculator save and retrieve result API"
+    implemented: true
+    working: true
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Необходимо протестировать API сохранения и получения результатов расчета калькулятора"
+      - working: true
+        agent: "testing"
+        comment: "Тестирование POST /api/calculator/save-result и GET /api/calculator/result/{unique_id} показало, что API сохранения и получения результатов расчета работает корректно. Результат расчета успешно сохраняется в базе данных и может быть получен по уникальному идентификатору. Все данные сохраняются и возвращаются без искажений."
 frontend:
   - task: "PDF download functionality"
     implemented: true
