@@ -15,38 +15,6 @@ function App() {
   // Check if current path is a public calculator route
   const isCalculatorRoute = window.location.pathname.startsWith('/calculator');
 
-  // Set initial page based on URL
-  useEffect(() => {
-    if (isCalculatorRoute) {
-      const path = window.location.pathname;
-      if (path === '/calculator') {
-        setCurrentPage('public-calculator');
-        // Initialize calculator settings
-        setTimeout(() => {
-          loadCalculatorSettings('passenger');
-        }, 100);
-      } else if (path.includes('/result/')) {
-        const resultId = path.split('/result/')[1];
-        setCurrentPage('calculator-result');
-        // Load result data
-        setTimeout(() => {
-          loadCalculatorResult(resultId);
-        }, 100);
-      }
-    } else {
-      // Check for authentication
-      const token = localStorage.getItem('token');
-      const userData = localStorage.getItem('user');
-      
-      if (token && userData) {
-        setIsAuthenticated(true);
-        setUser(JSON.parse(userData));
-        setCurrentPage('dashboard');
-        loadFormConfig();
-      }
-    }
-  }, []);
-
   // Function to sort records
   const sortRecords = (recordsToSort, key, direction) => {
     return [...recordsToSort].sort((a, b) => {
