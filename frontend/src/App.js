@@ -288,7 +288,11 @@ function App() {
     
     // Check if URL contains calculator routes (public access)
     const path = window.location.pathname;
+    console.log("Current path:", path);
+    console.log("Is calculator path:", path.startsWith('/calculator'));
+    
     if (path.startsWith('/calculator')) {
+      console.log("Setting calculator page");
       if (path === '/calculator') {
         setCurrentPage('public-calculator');
         // Initialize calculator settings
