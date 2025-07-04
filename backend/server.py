@@ -484,15 +484,25 @@ class RetailCRMIntegration:
     
     def save_orders(self, orders):
         """Save orders to database, avoid duplicates"""
-        for order in orders:
+        # Получаем последний номер записи один раз для всех заказов
+        last_record = storage_records_collection.find_one(
+            {}, 
+            sort=[("record_number", -1)]
+        )
+        
+        next_record_number = last_record["record_number"] + 1 if last_record and "record_number" in last_record else 1
+        
+        for i, order in enumerate(orders):
             # Check if order already exists by retailcrm_order_id
             existing = storage_records_collection.find_one({
                 "retailcrm_order_id": order.get("retailcrm_order_id")
             })
             
             if not existing:
+                # Присваиваем уникальный номер для каждой записи
+                order["record_number"] = next_record_number + i
                 storage_records_collection.insert_one(order)
-                logger.info(f"Saved new order from RetailCRM: {order.get('custom_field_1751496388330')}")
+                logger.info(f"Saved new order from RetailCRM: {order.get('custom_field_1751496388330')} with record_number {order['record_number']}")
             else:
                 logger.debug(f"Order already exists: {order.get('custom_field_1751496388330')}")
     
