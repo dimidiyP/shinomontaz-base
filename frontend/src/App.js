@@ -838,7 +838,12 @@ function App() {
 
 
 
-  // Auto-calculate when selections change
+  // Helper function to get field label from configuration
+  const getFieldLabel = (fieldName) => {
+    if (!formConfig) return fieldName;
+    const field = formConfig.find(f => f.name === fieldName);
+    return field ? field.label : fieldName;
+  };
   useEffect(() => {
     if (selectedServices.length > 0 && calculatorSettings[selectedVehicleType]) {
       calculateCost();
