@@ -392,7 +392,7 @@ class RetailCRMIntegration:
                 # Create a storage record format compatible entry
                 storage_record = {
                     "record_id": str(uuid.uuid4()),
-                    "record_number": self.generate_next_record_id(),
+                    "record_number": 0,  # Будет присвоен в save_orders
                     "full_name": self.extract_full_name(order),
                     "phone": self.extract_phone(order),
                     "phone_additional": "",
