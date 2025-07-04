@@ -873,22 +873,7 @@ function App() {
   };
 
   // If it's a public calculator route, don't require authentication
-  const path = window.location.pathname;
-  const isCalculatorRoute = path.startsWith('/calculator');
-  
-  // Set calculator page if on calculator route
-  useEffect(() => {
-    if (isCalculatorRoute) {
-      if (path === '/calculator') {
-        setCurrentPage('public-calculator');
-        loadCalculatorSettings('passenger');
-      } else if (path.includes('/result/')) {
-        const resultId = path.split('/result/')[1];
-        setCurrentPage('calculator-result');
-        loadCalculatorResult(resultId);
-      }
-    }
-  }, []);
+  const isCalculatorRoute = window.location.pathname.startsWith('/calculator');
   
   if (!isAuthenticated && !isCalculatorRoute) {
     return (
