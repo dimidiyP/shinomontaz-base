@@ -283,6 +283,10 @@ function App() {
   };
 
   useEffect(() => {
+    // Load calculator settings for both vehicle types
+    loadCalculatorSettings('passenger');
+    loadCalculatorSettings('truck');
+    
     const token = localStorage.getItem('token');
     const userData = localStorage.getItem('user');
     
@@ -295,10 +299,6 @@ function App() {
       console.log("Setting calculator page");
       if (path === '/calculator') {
         setCurrentPage('public-calculator');
-        // Initialize calculator settings
-        setTimeout(() => {
-          loadCalculatorSettings('passenger');
-        }, 100);
       } else if (path.includes('/result/')) {
         const resultId = path.split('/result/')[1];
         setCurrentPage('calculator-result');
