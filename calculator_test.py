@@ -245,18 +245,18 @@ class TireCalculatorAPITester(unittest.TestCase):
         TireCalculatorAPITester.saved_result_id = data["unique_id"]
         
         print(f"✅ Calculation result saved successfully")
-        print(f"✅ Unique ID: {self.saved_result_id}")
+        print(f"✅ Unique ID: {TireCalculatorAPITester.saved_result_id}")
         return True
 
     def test_6_get_saved_calculation(self):
         """Test getting saved calculation result"""
         print("\n🔍 Testing Get Saved Calculation Result...")
         
-        if not self.saved_result_id:
+        if not TireCalculatorAPITester.saved_result_id:
             print("⚠️ No saved result ID available, skipping test")
             return False
         
-        response = requests.get(f"{self.base_url}/api/calculator/result/{self.saved_result_id}")
+        response = requests.get(f"{self.base_url}/api/calculator/result/{TireCalculatorAPITester.saved_result_id}")
         
         self.assertEqual(response.status_code, 200, f"Failed to get saved calculation result: {response.text if response.status_code != 200 else ''}")
         data = response.json()
