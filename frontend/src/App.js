@@ -182,6 +182,11 @@ function App() {
     if (currentPage === 'pdf-config' && !pdfTemplateLoaded) {
       loadPdfTemplate();
     }
+    
+    // Load calculator settings when user navigates to calculator page
+    if (currentPage === 'public-calculator') {
+      loadCalculatorSettings('passenger');
+    }
   }, [currentPage, pdfTemplateLoaded]);
 
   const applyFilters = (recordsToFilter, activeFilters) => {
