@@ -242,7 +242,7 @@ class TireCalculatorAPITester(unittest.TestCase):
         self.assertIn("calculation", data, "Calculation not found in response")
         
         # Save the unique ID for the next test
-        self.saved_result_id = data["unique_id"]
+        TireCalculatorAPITester.saved_result_id = data["unique_id"]
         
         print(f"✅ Calculation result saved successfully")
         print(f"✅ Unique ID: {self.saved_result_id}")
