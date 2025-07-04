@@ -912,10 +912,12 @@ function App() {
     return path.startsWith('/calculator');
   };
 
+  // Check if this is a calculator route on initial load
+  const currentPath = window.location.pathname;
+  const isCalculatorPath = currentPath.startsWith('/calculator');
+
   // If it's a public calculator route, don't require authentication
-  if (!isAuthenticated) {
-    // Check if it's a calculator route
-    if (isPublicCalculatorRoute()) {
+  if (!isAuthenticated && !isCalculatorPath) {
       console.log("Rendering calculator without authentication");
       return (
         <div className="min-h-screen bg-gray-50">
