@@ -230,6 +230,21 @@ function App() {
     setShowInfoModal(true);
   };
 
+  const loadCalculatorResult = async (uniqueId) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/calculator/result/${uniqueId}`);
+      
+      if (response.ok) {
+        const result = await response.json();
+        setCalculatorResult(result);
+      } else {
+        setError('Результат не найден');
+      }
+    } catch (err) {
+      setError('Ошибка подключения к серверу');
+    }
+  };
+
   // Handle sort click
   const handleSort = (key) => {
     let direction = 'asc';
