@@ -761,6 +761,144 @@ function App() {
     if (selectedServices.length > 0 && calculatorSettings[selectedVehicleType]) {
       calculateCost();
     }
+  };
+
+  // Calculator functions
+  const loadCalculatorSettings = async (vehicleType) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/calculator/settings/${vehicleType}`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        setCalculatorSettings(prev => ({...prev, [vehicleType]: data}));
+      } else {
+        setError('Ошибка загрузки настроек калькулятора');
+      }
+    } catch (err) {
+      setError('Ошибка подключения к серверу');
+    }
+  };
+
+  const calculateCost = async () => {
+    try {
+      const requestData = {
+        vehicle_type: selectedVehicleType,
+        tire_size: selectedTireSize,
+        wheel_count: wheelCount,
+        selected_services: selectedServices,
+        additional_options: selectedOptions
+      };
+
+      const response = await fetch(`${API_BASE_URL}/api/calculator/calculate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestData),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        setCalculationResult(result);
+      } else {
+        setError('Ошибка расчета стоимости');
+      }
+    } catch (err) {
+      setError('Ошибка подключения к серверу');
+    }
+  };
+
+  const saveCalculationResult = async () => {
+    try {
+      const requestData = {
+        vehicle_type: selectedVehicleType,
+        tire_size: selectedTireSize,
+        wheel_count: wheelCount,
+        selected_services: selectedServices,
+        additional_options: selectedOptions
+      };
+
+      const response = await fetch(`${API_BASE_URL}/api/calculator/save-result`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestData),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        const link = `${window.location.origin}/calculator/result/${result.unique_id}`;
+        
+        // Copy to clipboard
+        if (navigator.clipboard) {
+          await navigator.clipboard.writeText(link);
+          setSuccess('Ссылка скопирована в буфер обмена!');
+        } else {
+          // Fallback for older browsers
+          const textArea = document.createElement('textarea');
+          textArea.value = link;
+          document.body.appendChild(textArea);
+          textArea.select();
+          document.execCommand('copy');
+          document.body.removeChild(textArea);
+          setSuccess('Ссылка скопирована в буфер обмена!');
+        }
+        
+        return result.unique_id;
+      } else {
+        setError('Ошибка сохранения результата');
+      }
+    } catch (err) {
+      setError('Ошибка подключения к серверу');
+    }
+  };
+
+  const loadCalculatorResult = async (uniqueId) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/calculator/result/${uniqueId}`);
+      
+      if (response.ok) {
+        const result = await response.json();
+        setCalculatorResult(result);
+      } else {
+        setError('Результат не найден');
+      }
+    } catch (err) {
+      setError('Ошибка подключения к серверу');
+    }
+  };
+
+  const toggleService = (serviceId) => {
+    setSelectedServices(prev => {
+      if (prev.includes(serviceId)) {
+        return prev.filter(id => id !== serviceId);
+      } else {
+        return [...prev, serviceId];
+      }
+    });
+  };
+
+  const toggleOption = (optionId) => {
+    setSelectedOptions(prev => {
+      if (prev.includes(optionId)) {
+        return prev.filter(id => id !== optionId);
+      } else {
+        return [...prev, optionId];
+      }
+    });
+  };
+
+  const showInfoModal = (title, description) => {
+    setInfoModalContent({ title, description });
+    setShowInfoModal(true);
+  };
+
+  // Auto-calculate when selections change
+  useEffect(() => {
+    if (selectedServices.length > 0 && calculatorSettings[selectedVehicleType]) {
+      calculateCost();
+    }
   }, [selectedVehicleType, selectedTireSize, wheelCount, selectedServices, selectedOptions]);
 
   // Users management functions
