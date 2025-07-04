@@ -244,13 +244,15 @@ function App() {
     setShowInfoModal(true);
   };
 
-  const loadCalculatorResult = async (uniqueId) => {
+  const loadCalculatorResult = async (shortId) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/calculator/result/${uniqueId}`);
+      const response = await fetch(`${API_BASE_URL}/api/calculator/result/${shortId}`);
       
       if (response.ok) {
         const result = await response.json();
         setCalculatorResult(result);
+      } else if (response.status === 410) {
+        setError('Ссылка истекла (срок действия 7 дней)');
       } else {
         setError('Результат не найден');
       }
