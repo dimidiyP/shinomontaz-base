@@ -259,6 +259,54 @@ function App() {
     }
   };
 
+  // Calculator admin functions
+  const loadAdminCalculatorSettings = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_BASE_URL}/api/admin/calculator/settings`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const settingsMap = {};
+        data.forEach(setting => {
+          settingsMap[setting.vehicle_type] = setting;
+        });
+        setAdminCalculatorSettings(settingsMap);
+      } else {
+        setError('Ошибка загрузки настроек калькулятора');
+      }
+    } catch (err) {
+      setError('Ошибка подключения к серверу');
+    }
+  };
+
+  const saveCalculatorSettings = async (vehicleType, settings) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_BASE_URL}/api/admin/calculator/settings/${vehicleType}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(settings),
+      });
+
+      if (response.ok) {
+        setSuccess('Настройки калькулятора сохранены');
+        loadAdminCalculatorSettings(); // Reload settings
+      } else {
+        setError('Ошибка при сохранении настроек');
+      }
+    } catch (err) {
+      setError('Ошибка подключения к серверу');
+    }
+  };
+
   // Handle sort click
   const handleSort = (key) => {
     let direction = 'asc';
