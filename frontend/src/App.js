@@ -1811,6 +1811,273 @@ function App() {
           </div>
         )}
 
+        {/* Public Calculator Page */}
+        {currentPage === 'public-calculator' && (
+          <div className="min-h-screen bg-gray-50">
+            <div className="container mx-auto px-4 py-8">
+              <div className="max-w-4xl mx-auto">
+                <div className="bg-white rounded-xl shadow-lg p-8 mb-8">
+                  <h1 className="text-3xl font-bold text-gray-900 mb-2">Калькулятор Шиномонтажа</h1>
+                  <p className="text-gray-600 mb-8">Рассчитайте стоимость услуг шиномонтажа онлайн</p>
+                  
+                  {/* Vehicle Type Selection */}
+                  <div className="mb-6">
+                    <label className="block text-sm font-medium text-gray-700 mb-3">Тип транспорта</label>
+                    <div className="flex space-x-4">
+                      <button
+                        onClick={() => {
+                          setSelectedVehicleType('passenger');
+                          loadCalculatorSettings('passenger');
+                        }}
+                        className={`px-6 py-3 rounded-lg font-medium ${
+                          selectedVehicleType === 'passenger'
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        }`}
+                      >
+                        Легковой автомобиль
+                      </button>
+                      <button
+                        onClick={() => {
+                          setSelectedVehicleType('truck');
+                          loadCalculatorSettings('truck');
+                        }}
+                        className={`px-6 py-3 rounded-lg font-medium ${
+                          selectedVehicleType === 'truck'
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        }`}
+                      >
+                        Грузовой автомобиль
+                      </button>
+                    </div>
+                  </div>
+
+                  {calculatorSettings[selectedVehicleType] && (
+                    <>
+                      {/* Tire Size Selection */}
+                      <div className="mb-6">
+                        <label className="block text-sm font-medium text-gray-700 mb-3">Размер шин</label>
+                        <select
+                          value={selectedTireSize}
+                          onChange={(e) => setSelectedTireSize(e.target.value)}
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        >
+                          {Object.keys(calculatorSettings[selectedVehicleType].services[0]?.time_by_size || {}).map(size => (
+                            <option key={size} value={size}>{size}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* Wheel Count */}
+                      <div className="mb-6">
+                        <label className="block text-sm font-medium text-gray-700 mb-3">Количество колес</label>
+                        <div className="flex space-x-4">
+                          {[1, 2, 4].map(count => (
+                            <button
+                              key={count}
+                              onClick={() => setWheelCount(count)}
+                              className={`px-4 py-2 rounded-lg font-medium ${
+                                wheelCount === count
+                                  ? 'bg-blue-600 text-white'
+                                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                              }`}
+                            >
+                              {count} {count === 1 ? 'колесо' : count === 2 ? 'колеса' : 'колеса'}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Services Selection */}
+                      <div className="mb-6">
+                        <label className="block text-sm font-medium text-gray-700 mb-3">Услуги</label>
+                        <div className="space-y-3">
+                          {calculatorSettings[selectedVehicleType].services.map(service => (
+                            <div key={service.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                              <div className="flex items-center">
+                                <input
+                                  type="checkbox"
+                                  id={service.id}
+                                  checked={selectedServices.includes(service.id)}
+                                  onChange={() => toggleService(service.id)}
+                                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                />
+                                <div className="ml-3">
+                                  <label htmlFor={service.id} className="text-sm font-medium text-gray-900 cursor-pointer">
+                                    {service.name}
+                                  </label>
+                                  <p className="text-sm text-gray-500">{service.time_by_size[selectedTireSize] || 0} мин/колесо</p>
+                                </div>
+                              </div>
+                              <div className="flex items-center">
+                                <button
+                                  onClick={() => showInfoModal(service.name, service.description)}
+                                  className="text-blue-600 hover:text-blue-800 ml-2"
+                                >
+                                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+                                  </svg>
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Additional Options */}
+                      {calculatorSettings[selectedVehicleType].additional_options.length > 0 && (
+                        <div className="mb-6">
+                          <label className="block text-sm font-medium text-gray-700 mb-3">Дополнительные опции</label>
+                          <div className="space-y-3">
+                            {calculatorSettings[selectedVehicleType].additional_options.map(option => (
+                              <div key={option.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                                <div className="flex items-center">
+                                  <input
+                                    type="checkbox"
+                                    id={option.id}
+                                    checked={selectedOptions.includes(option.id)}
+                                    onChange={() => toggleOption(option.id)}
+                                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                  />
+                                  <div className="ml-3">
+                                    <label htmlFor={option.id} className="text-sm font-medium text-gray-900 cursor-pointer">
+                                      {option.name}
+                                    </label>
+                                    <p className="text-sm text-gray-500">×{option.time_multiplier}</p>
+                                  </div>
+                                </div>
+                                <button
+                                  onClick={() => showInfoModal(option.name, option.description)}
+                                  className="text-blue-600 hover:text-blue-800 ml-2"
+                                >
+                                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+                                  </svg>
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Results */}
+                      {calculationResult && (
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
+                          <h3 className="text-lg font-medium text-blue-900 mb-4">Результат расчета</h3>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                              <p className="text-sm text-blue-700">Общее время:</p>
+                              <p className="text-xl font-bold text-blue-900">{calculationResult.total_time} минут</p>
+                            </div>
+                            <div>
+                              <p className="text-sm text-blue-700">Общая стоимость:</p>
+                              <p className="text-xl font-bold text-blue-900">{calculationResult.total_cost} рублей</p>
+                            </div>
+                          </div>
+                          
+                          <button
+                            onClick={saveCalculationResult}
+                            className="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium"
+                          >
+                            Сохранить и получить ссылку
+                          </button>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Calculator Result Page */}
+        {currentPage === 'calculator-result' && calculatorResult && (
+          <div className="min-h-screen bg-gray-50">
+            <div className="container mx-auto px-4 py-8">
+              <div className="max-w-4xl mx-auto">
+                <div className="bg-white rounded-xl shadow-lg p-8">
+                  <h1 className="text-3xl font-bold text-gray-900 mb-6">Результат расчета</h1>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div>
+                      <h3 className="text-lg font-medium text-gray-900 mb-4">Параметры</h3>
+                      <div className="space-y-2">
+                        <p><span className="font-medium">Тип транспорта:</span> {calculatorResult.calculation.vehicle_type === 'passenger' ? 'Легковой' : 'Грузовой'}</p>
+                        <p><span className="font-medium">Размер шин:</span> {calculatorResult.calculation.tire_size}</p>
+                        <p><span className="font-medium">Количество колес:</span> {calculatorResult.calculation.wheel_count}</p>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h3 className="text-lg font-medium text-gray-900 mb-4">Стоимость</h3>
+                      <div className="space-y-2">
+                        <p><span className="font-medium">Время:</span> {calculatorResult.calculation.total_time} минут</p>
+                        <p><span className="font-medium">Стоимость:</span> {calculatorResult.calculation.total_cost} рублей</p>
+                        <p><span className="font-medium">Дата расчета:</span> {new Date(calculatorResult.created_at).toLocaleDateString('ru-RU')}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mb-6">
+                    <h3 className="text-lg font-medium text-gray-900 mb-4">Выбранные услуги</h3>
+                    <div className="space-y-2">
+                      {calculatorResult.calculation.breakdown.services.map(service => (
+                        <div key={service.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                          <span>{service.name}</span>
+                          <span>{service.total_time} мин</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex space-x-4">
+                    <button
+                      onClick={() => window.location.href = '/calculator'}
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium"
+                    >
+                      Создать новый расчет
+                    </button>
+                    <button
+                      onClick={() => window.print()}
+                      className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-medium"
+                    >
+                      Печать
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Info Modal */}
+        {showInfoModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-xl shadow-xl p-6 max-w-md w-full mx-4">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-medium text-gray-900">{infoModalContent.title}</h3>
+                <button
+                  onClick={() => setShowInfoModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <p className="text-gray-600 mb-4">{infoModalContent.description}</p>
+              <button
+                onClick={() => setShowInfoModal(false)}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium"
+              >
+                Понятно
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Record Detail Modal */}
         {showRecordDetail && selectedRecord && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
