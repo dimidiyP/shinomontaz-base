@@ -1352,17 +1352,6 @@ function App() {
                 </button>
               )}
 
-              <div className="bg-gray-100 p-6 rounded-xl">
-                <h3 className="text-xl font-semibold mb-2">Публичный калькулятор</h3>
-                <p className="text-gray-600 mb-4">Ссылка для клиентов</p>
-                <button
-                  onClick={() => window.open('/calculator', '_blank')}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium"
-                >
-                  Открыть калькулятор
-                </button>
-              </div>
-
               {hasPermission('calculator_management') && (
                 <button
                   onClick={() => {setCurrentPage('calculator-admin'); clearMessages();}}
