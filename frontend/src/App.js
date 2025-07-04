@@ -273,10 +273,17 @@ function App() {
     if (path.startsWith('/calculator')) {
       if (path === '/calculator') {
         setCurrentPage('public-calculator');
+        // Initialize calculator settings
+        setTimeout(() => {
+          loadCalculatorSettings('passenger');
+        }, 100);
       } else if (path.includes('/result/')) {
         const resultId = path.split('/result/')[1];
         setCurrentPage('calculator-result');
-        // Load result data here if needed
+        // Load result data
+        setTimeout(() => {
+          loadCalculatorResult(resultId);
+        }, 100);
       }
       return; // Skip authentication check for calculator pages
     }
