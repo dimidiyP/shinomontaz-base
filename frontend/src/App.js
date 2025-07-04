@@ -1071,14 +1071,10 @@ function App() {
                     {calculationResult && (
                       <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
                         <h3 className="text-lg font-medium text-blue-900 mb-4">Результат расчета</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                          <div>
-                            <p className="text-sm text-blue-700">Общее время:</p>
-                            <p className="text-xl font-bold text-blue-900">{calculationResult.total_time} минут</p>
-                          </div>
-                          <div>
+                        <div className="mb-4">
+                          <div className="text-center">
                             <p className="text-sm text-blue-700">Общая стоимость:</p>
-                            <p className="text-xl font-bold text-blue-900">{calculationResult.total_cost} рублей</p>
+                            <p className="text-3xl font-bold text-blue-900">{calculationResult.total_cost} рублей</p>
                           </div>
                         </div>
                         
