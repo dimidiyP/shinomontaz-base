@@ -2011,7 +2011,7 @@ function App() {
                   </button>
                 </div>
                 
-                {formConfig.fields.map((field, index) => (
+                {formConfig && formConfig.fields && formConfig.fields.map((field, index) => (
                   <div 
                     key={index} 
                     className="border border-gray-200 rounded-lg p-4 cursor-move transition-colors hover:bg-gray-50"
