@@ -68,6 +68,10 @@ jobs:
           docker ps -q --filter "publish=80" | xargs -r docker stop || true &&
           docker ps -q --filter "publish=443" | xargs -r docker stop || true &&
           
+          # Kill any process using port 80 or 443 if still occupied
+          sudo fuser -k 80/tcp || true &&
+          sudo fuser -k 443/tcp || true &&
+          
           docker-compose up -d &&
           docker system prune -f &&
           
