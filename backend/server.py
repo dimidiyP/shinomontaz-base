@@ -74,7 +74,7 @@ security = HTTPBearer()
 def init_default_data():
     # Create default users if they don't exist
     if users_collection.count_documents({}) == 0:
-        admin_password = bcrypt.hashpw("K2enlzuzz2".encode('utf-8'), bcrypt.gensalt())
+        admin_password = bcrypt.hashpw("admin".encode('utf-8'), bcrypt.gensalt())
         user_password = bcrypt.hashpw("user".encode('utf-8'), bcrypt.gensalt())
         
         users_collection.insert_many([
