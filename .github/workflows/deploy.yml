@@ -33,7 +33,12 @@ jobs:
           echo "Creating backup: $BACKUP_NAME" &&
           
           # Stop services before backup
-          docker-compose down &&
+          docker-compose down --remove-orphans || true &&
+          
+          # Force cleanup any remaining containers using ports 80, 443
+          docker ps -q --filter "publish=80" | xargs -r docker stop || true &&
+          docker ps -q --filter "publish=443" | xargs -r docker stop || true &&
+          docker system prune -f || true &&
           
           # Create full backup
           tar -czf "/opt/backups/$BACKUP_NAME.tar.gz" \
