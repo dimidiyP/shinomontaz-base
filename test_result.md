@@ -425,6 +425,21 @@ frontend:
       - working: true
         agent: "testing"
         comment: "Форма создания записи успешно загружается и отображает поля. Динамические поля отображаются корректно."
+        
+  - task: "Public calculator functionality"
+    implemented: true
+    working: false
+    file: "App.js"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Необходимо протестировать публичный калькулятор шиномонтажа"
+      - working: false
+        agent: "testing"
+        comment: "Публичный калькулятор недоступен без авторизации. При попытке перейти по URL /calculator происходит перенаправление на страницу логина. Код содержит логику для обработки маршрута /calculator без авторизации (в useEffect), но она не работает. Даже после авторизации и перехода на /calculator не отображается страница калькулятора."
 
 metadata:
   created_by: "main_agent"
