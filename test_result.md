@@ -434,10 +434,9 @@ metadata:
 
 test_plan:
   current_focus:
-    - "PDF download functionality"
-    - "Detailed record view with retail_status_text"
-    - "Status transitions for storage records"
-    - "Drag & Drop в редакторе полей"
+    - "Calculator settings API"
+    - "Calculator calculation API"
+    - "Calculator save and retrieve result API"
   stuck_tasks:
     - "PDF download functionality"
     - "Detailed record view with retail_status_text"
