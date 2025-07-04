@@ -430,9 +430,9 @@ frontend:
     implemented: true
     working: false
     file: "App.js"
-    stuck_count: 2
+    stuck_count: 3
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "testing"
@@ -443,6 +443,9 @@ frontend:
       - working: false
         agent: "testing"
         comment: "После исправления роутинга публичный калькулятор все еще недоступен без авторизации. При попытке перейти по URL /calculator происходит перенаправление на страницу логина. Проблема в том, что функция isPublicCalculatorRoute() вызывается корректно, но условие в коде не срабатывает должным образом. Требуется дополнительное исследование и исправление."
+      - working: false
+        agent: "testing"
+        comment: "После внесения изменений в код для обработки публичных маршрутов, калькулятор все еще недоступен без авторизации. Консольные логи показывают, что path = '/' вместо '/calculator', что указывает на возможное перенаправление на стороне сервера. Попытка входа в систему с учетными данными admin/admin не удалась (ошибка 'Invalid credentials'). Необходимо проверить настройки сервера и маршрутизации."
 
 metadata:
   created_by: "main_agent"
