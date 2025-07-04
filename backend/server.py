@@ -1526,12 +1526,16 @@ async def save_calculator_result(request: CalculatorRequest):
     
     return {"unique_id": unique_id, "calculation": calculation}
 
-@app.get("/api/calculator/result/{unique_id}")
-async def get_calculator_result(unique_id: str):
-    """Get saved calculation result by unique ID (public endpoint)"""
-    result = calculator_results_collection.find_one({"unique_id": unique_id})
+@app.get("/api/calculator/result/{short_id}")
+async def get_calculator_result(short_id: str):
+    """Get saved calculation result by short ID (public endpoint)"""
+    result = calculator_results_collection.find_one({"short_id": short_id})
     if not result:
         raise HTTPException(status_code=404, detail="Result not found")
+    
+    # Check if result has expired
+    if "expires_at" in result and result["expires_at"] < datetime.now():
+        raise HTTPException(status_code=410, detail="Result has expired")
     
     # Remove MongoDB _id field
     result.pop('_id', None)
