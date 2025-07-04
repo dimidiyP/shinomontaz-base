@@ -1014,7 +1014,6 @@ function App() {
                                 <label htmlFor={service.id} className="text-sm font-medium text-gray-900 cursor-pointer">
                                   {service.name}
                                 </label>
-                                <p className="text-sm text-gray-500">{service.time_by_size[selectedTireSize] || 0} мин/колесо</p>
                               </div>
                             </div>
                             <div className="flex items-center">
