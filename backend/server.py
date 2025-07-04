@@ -511,11 +511,11 @@ class RetailCRMIntegration:
         self.scheduler.add_job(
             self.fetch_orders,
             'interval',
-            minutes=5,  # Every 5 minutes as requested
+            hours=1,  # Every 1 hour to reduce server load
             id='retailcrm_sync'
         )
         self.scheduler.start()
-        logger.info("RetailCRM scheduler started - running every 5 minutes")
+        logger.info("RetailCRM scheduler started - running every 1 hour")
     
     def update_retailcrm_status(self, order_number, new_status):
         """Update order status in RetailCRM"""
