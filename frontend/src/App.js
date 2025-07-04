@@ -907,6 +907,8 @@ function App() {
   // Check if current path is a public calculator route
   const isPublicCalculatorRoute = () => {
     const path = window.location.pathname;
+    console.log("isPublicCalculatorRoute called, path:", path);
+    console.log("Result:", path.startsWith('/calculator'));
     return path.startsWith('/calculator');
   };
 
