@@ -1641,11 +1641,11 @@ async def get_calculator_results(current_user = Depends(verify_token)):
 # Initialize default data on startup
 init_default_data()
 
-# Start RetailCRM scheduler (temporarily disabled to fix frequent sync issues)
-# try:
-#     retailcrm.start_scheduler()
-# except Exception as e:
-#     logger.error(f"Failed to start RetailCRM scheduler: {str(e)}")
+# Start RetailCRM scheduler (reduced frequency to 1 hour to avoid server overload)
+try:
+    retailcrm.start_scheduler()
+except Exception as e:
+    logger.error(f"Failed to start RetailCRM scheduler: {str(e)}")
 
 if __name__ == "__main__":
     import uvicorn
