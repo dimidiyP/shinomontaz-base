@@ -102,7 +102,20 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "При попытке посмотреть записи выдает ошибку. Так же в меню пропали калькулятор, и не появилась админка"
+user_problem_statement: "Опять проблема, что отвалился от сервера, необходимо исправить. Но потом оказалось что домен https://baseshinomontaz.ru/ и все заработало"
+
+backend:
+  - task: "Server connectivity and DNS resolution"
+    implemented: true
+    working: true
+    file: "DNS configuration"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "troubleshoot"
+        comment: "Провел глубокий анализ проблемы 'отвалился от сервера'. Обнаружил что все сервисы работают корректно, backend отвечает, frontend компилируется. Проблема была в DNS - пользователь использовал неправильный домен. Правильный домен https://baseshinomontaz.ru/ работает корректно."
 
 backend:
   - task: "Records API and authentication"
