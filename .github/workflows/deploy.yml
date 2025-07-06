@@ -26,7 +26,7 @@ jobs:
           
           # Stop supervisor services to free up ports (prevents conflicts)
           echo "⏹️ Stopping supervisor services to prevent port conflicts..." &&
-          supervisorctl stop all || true &&
+          /usr/bin/supervisorctl stop all || true &&
           
           # Kill any remaining processes that might block ports
           sudo pkill -f mongod || true &&
