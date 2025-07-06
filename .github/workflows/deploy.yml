@@ -26,14 +26,7 @@ jobs:
           
           # Stop supervisor services to free up ports (prevents conflicts)
           echo "⏹️ Stopping supervisor services to prevent port conflicts..." &&
-          /usr/bin/supervisorctl stop all || true &&
-          
-          # Kill any remaining processes that might block ports
-          sudo pkill -f mongod || true &&
-          sudo pkill -f uvicorn || true &&
-          sudo pkill -f "yarn start" || true &&
-          sudo pkill -f nginx || true &&
-          sleep 5 &&
+          ./stop_supervisor.sh &&
           
           # Create backup directory if not exists
           mkdir -p /opt/backups &&
