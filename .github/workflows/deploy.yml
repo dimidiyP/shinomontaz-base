@@ -190,13 +190,13 @@ jobs:
                 sleep 3 &&
                 
                 # Start supervisor services
-                supervisorctl start mongodb &&
+                /usr/bin/supervisorctl start mongodb &&
                 sleep 5 &&
-                supervisorctl start backend &&
+                /usr/bin/supervisorctl start backend &&
                 sleep 5 &&
-                supervisorctl start frontend &&
+                /usr/bin/supervisorctl start frontend &&
                 sleep 10 &&
-                supervisorctl start nginx &&
+                /usr/bin/supervisorctl start nginx &&
                 
                 echo "✅ Emergency supervisor fallback completed"
               }
