@@ -2,6 +2,18 @@
 
 echo "🚀 Starting deployment..."
 
+# Stop supervisor services to free up ports
+echo "⏹️ Stopping supervisor services..."
+sudo supervisorctl stop all || true
+
+# Kill any remaining processes that might block ports
+echo "🧹 Cleaning up processes..."
+sudo pkill -f mongod || true
+sudo pkill -f uvicorn || true
+sudo pkill -f "yarn start" || true
+sudo pkill -f nginx || true
+sleep 5
+
 # Stop all services
 echo "⏹️ Stopping containers..."
 docker-compose down
