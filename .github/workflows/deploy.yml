@@ -150,7 +150,7 @@ jobs:
           echo "❌ Deployment failed! Starting rollback..." &&
           
           # Stop current containers
-          docker-compose down &&
+          docker-compose down || true &&
           
           # Get latest backup
           LATEST_BACKUP=$(ls -t /opt/backups/backup_*.tar.gz | head -1) &&
@@ -162,11 +162,45 @@ jobs:
             cd / &&
             tar -xzf "$LATEST_BACKUP" &&
             
-            # Restart services
+            # Try to restart with Docker first
             cd /opt/shinomontaz &&
             docker-compose up -d &&
             
-            echo "✅ Rollback completed"
+            # Wait and test
+            sleep 30 &&
+            if curl -f http://localhost/ > /dev/null 2>&1; then
+              echo "✅ Docker rollback successful"
+            else
+              echo "⚠️ Docker rollback failed, switching to supervisor mode..." &&
+              
+              # Emergency fallback to supervisor mode
+              ./emergency_fallback.sh || {
+                echo "🚨 Running emergency fallback manually..." &&
+                
+                # Stop all Docker
+                docker-compose down || true &&
+                docker stop $(docker ps -aq) 2>/dev/null || true &&
+                
+                # Free ports
+                sudo fuser -k 80/tcp 2>/dev/null || true &&
+                sudo fuser -k 443/tcp 2>/dev/null || true &&
+                sudo fuser -k 3000/tcp 2>/dev/null || true &&
+                sudo fuser -k 8001/tcp 2>/dev/null || true &&
+                sudo fuser -k 27017/tcp 2>/dev/null || true &&
+                sleep 3 &&
+                
+                # Start supervisor services
+                supervisorctl start mongodb &&
+                sleep 5 &&
+                supervisorctl start backend &&
+                sleep 5 &&
+                supervisorctl start frontend &&
+                sleep 10 &&
+                supervisorctl start nginx &&
+                
+                echo "✅ Emergency supervisor fallback completed"
+              }
+            fi
           else
             echo "❌ No backup found for rollback!"
           fi
