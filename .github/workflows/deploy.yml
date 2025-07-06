@@ -24,6 +24,17 @@ jobs:
         ssh -o StrictHostKeyChecking=no root@83.222.18.104 '
           cd /opt/shinomontaz &&
           
+          # Stop supervisor services to free up ports (prevents conflicts)
+          echo "⏹️ Stopping supervisor services to prevent port conflicts..." &&
+          supervisorctl stop all || true &&
+          
+          # Kill any remaining processes that might block ports
+          sudo pkill -f mongod || true &&
+          sudo pkill -f uvicorn || true &&
+          sudo pkill -f "yarn start" || true &&
+          sudo pkill -f nginx || true &&
+          sleep 5 &&
+          
           # Create backup directory if not exists
           mkdir -p /opt/backups &&
           mkdir -p /opt/test-reports &&
